@@ -219,8 +219,10 @@ if hwtype == "mac80211" then
 
 		tp:value("", translate("auto"))
 		for _, p in ipairs(tx_power_list) do
+		  if p.display_dbm < 50 then
 			tp:value(p.driver_dbm, "%i dBm (%i mW)"
 				%{ p.display_dbm, p.display_mw })
+		  end
 		end
 	end
 
@@ -260,6 +262,11 @@ if hwtype == "mac80211" then
 
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
+	
+	o = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
+	o.datatype = 'range(15,65535)';
+	o.placeholder = 100;
+	o.rmempty = true;
 end
 
 
@@ -383,6 +390,11 @@ if hwtype == "mt_dbdc" then
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
 	s:taboption("advanced", Flag, "txburst", translate("TX Bursting"))
+	
+	o = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
+	o.datatype = 'range(15,65535)';
+	o.placeholder = 100;
+	o.rmempty = true;
 end
 
 ----------------------- Interface -----------------------
@@ -536,8 +548,8 @@ if hwtype == "mac80211" then
 	ifname = s:taboption("advanced", Value, "ifname", translate("Interface name"), translate("Override default interface name"))
 	ifname.optional = true
 
-  disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
-  disassoc_low_ack.default = disassoc_low_ack.enabled
+	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
+	disassoc_low_ack.default = disassoc_low_ack.enabled
 end
 
 
@@ -618,7 +630,20 @@ if hwtype == "mt_dbdc" then
 	s:taboption("advanced", Flag, "doth", "802.11h")
 
 	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
-	disassoc_low_ack.default = disassoc_low_ack.enabled
+	disassoc_low_ack.default = disassoc_low_ack.disabled
+	disassoc_low_ack:depends({mode="ap"})
+	
+	rssikick= s:taboption("general", Value, "rssikick", translate("Kick low RSSI station threshold"), translate("dBm"));
+	rssikick.optional    = true
+	rssikick.placeholder = 75
+	rssikick.datatype = "range(-100,0)"
+	rssikick:depends("disassoc_low_ack", "1")
+
+	rssiassoc= s:taboption("general", Value, "rssiassoc", translate("Station associate threshold"), translate("dBm"));
+	rssiassoc.optional    = true
+	rssiassoc.placeholder = 60
+	rssiassoc.datatype    = "range(-100,0)"
+	rssiassoc:depends("disassoc_low_ack", "1")
 end
 
 ------------------- WiFI-Encryption -------------------
@@ -760,6 +785,8 @@ elseif hwtype == "mt_dbdc" then
 	encr:value("psk", "WPA-PSK")
 	encr:value("psk2", "WPA2-PSK")
 	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
+	encr:value("sae", "WPA3-PSK")
+	encr:value("sae-mixed", "WPA2-PSK/WPA3-PSK Mixed Mode")
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))
@@ -881,6 +908,8 @@ if hwtype == "mt_dbdc" then
 	wps:depends({mode="ap", encryption="psk"})
 	wps:depends({mode="ap", encryption="psk2"})
 	wps:depends({mode="ap", encryption="psk-mixed"})
+	wps:depends({mode="ap", encryption="sae"})
+	wps:depends({mode="ap", encryption="sae-mixed"})
 	pin:depends({wps="pin"})
 end
 
@@ -1269,7 +1298,7 @@ if hwtype == "mac80211" or hwtype == "mt_dbdc" then
 	key_retries:depends({mode="ap-wds", encryption="sae-mixed"})
 end
 
-if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
+if hwtype == "mac80211" or hwtype == "prism2" then
 	local wpasupplicant = fs.access("/usr/sbin/wpa_supplicant")
 	local hostcli = fs.access("/usr/sbin/hostapd_cli")
 	if hostcli and wpasupplicant then
@@ -1280,6 +1309,8 @@ if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
 		wps:depends("encryption", "psk")
 		wps:depends("encryption", "psk2")
 		wps:depends("encryption", "psk-mixed")
+		wps:depends("encryption", "sae")
+		wps:depends("encryption", "sae-mixed")
 	end
 end
 
