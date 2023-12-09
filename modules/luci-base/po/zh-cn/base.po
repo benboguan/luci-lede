@@ -3673,6 +3673,9 @@ msgstr "WMM 模式"
 msgid "WPA passphrase"
 msgstr "WPA 密钥"
 
+msgid "WPS Mode"
+msgstr "WPS 模式"
+
 msgid ""
 "WPA-Encryption requires wpa_supplicant (for client mode) or hostapd (for AP "
 "and ad-hoc mode) to be installed."
