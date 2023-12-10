@@ -99,8 +99,8 @@ local function txpower_current(pwr, list)
 	if pwr ~= nil then
 		local _, item
 		for _, item in ipairs(list) do
-			if item.driver_dbm >= pwr then
-				return item.driver_dbm
+			if item.driver_mw >= pwr then
+				return item.driver_mw
 			end
 		end
 	end
@@ -197,12 +197,15 @@ else
 		m:set(section, "htmode", value[3])
 	end
 
-	noscan = s:taboption("general", Flag, "noscan", translate("Force 40MHz mode"),
-		translate("Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!"))
-	noscan.default = noscan.disabled
+	-------------------------------support 11g------------------------------
+	if hw_modes.g then
+		noscan = s:taboption("general", Flag, "noscan", translate("Force 40MHz mode"),
+			translate("Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!"))
+		noscan.default = noscan.disabled
 
-	vendor_vht = s:taboption("general", Flag, "vendor_vht", translate("Enable 256-QAM"),translate("802.11n 2.4Ghz Only"))
-	vendor_vht.default = vendor_vht.disabled
+		vendor_vht = s:taboption("general", Flag, "vendor_vht", translate("Enable 256-QAM"),translate("802.11n 2.4Ghz Only"))
+		vendor_vht.default = vendor_vht.disabled
+	end
 end
 
 ------------------- MAC80211 Device ------------------
@@ -356,11 +359,11 @@ if hwtype == "prism2" then
 end
 
 
---------------------- MT7615 Device ---------------------
+--------------------- MT7615/MT7915 Device ---------------------
 if hwtype == "mt_dbdc" then
 	if #tx_power_list > 0 then
 		tp = s:taboption("general", ListValue,
-			"txpower", translate("Transmit Power"), "dBm")
+			"txpower", translate("Transmit Power"), "mW")
 		tp.rmempty = true
 		tp.default = tx_power_cur
 		function tp.cfgvalue(...)
@@ -369,10 +372,18 @@ if hwtype == "mt_dbdc" then
 
 		tp:value("", translate("auto"))
 		for _, p in ipairs(tx_power_list) do
-			tp:value(p.driver_dbm, "%i dBm (%i mW)"
-				%{ p.display_dbm, p.display_mw })
+			tp:value(p.driver_mw, "%i mW (%i dBm)"
+				%{ p.display_mw, p.display_dbm })
 		end
 	end
+
+	-------------------------------support 11ac------------------------------
+	if hw_modes.ac then
+		mubeamformer = s:taboption("advanced", Flag, "mu_beamformer", translate("MU-MIMO"))
+		mubeamformer.rmempty = false
+		mubeamformer.default = "0"
+	end
+
 	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"))
 	wmm.default = wmm.enabled
 
@@ -552,7 +563,6 @@ if hwtype == "mac80211" then
 	disassoc_low_ack.default = disassoc_low_ack.enabled
 end
 
-
 -------------------- Broadcom Interface ----------------------
 
 if hwtype == "broadcom" then
@@ -604,7 +614,8 @@ if hwtype == "prism2" then
 end
 
 
------------------------ MT7615 Interface ---------------------
+----------------------- MT7615/MT7915 Interface ---------------------
+
 if hwtype == "mt_dbdc" then
 	bssid:depends({mode="sta"})
 
@@ -715,7 +726,7 @@ encr:value("none", "No Encryption")
 encr:value("wep-open",   translate("WEP Open System"), {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 encr:value("wep-shared", translate("WEP Shared Key"),  {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 
-if hwtype == "mac80211" or hwtype == "prism2" then
+if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
 	local supplicant = fs.access("/usr/sbin/wpa_supplicant")
 	local hostapd = fs.access("/usr/sbin/hostapd")
 
@@ -723,7 +734,7 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	local has_ap_eap  = (os.execute("hostapd -veap >/dev/null 2>/dev/null") == 0)
 	local has_sta_eap = (os.execute("wpa_supplicant -veap >/dev/null 2>/dev/null") == 0)
 
-		-- Probe SAE support
+	-- Probe SAE support
 	local has_ap_sae  = (os.execute("hostapd -vsae >/dev/null 2>/dev/null") == 0)
 	local has_sta_sae = (os.execute("wpa_supplicant -vsae >/dev/null 2>/dev/null") == 0)
 
@@ -781,12 +792,6 @@ elseif hwtype == "broadcom" then
 	encr:value("psk", "WPA-PSK")
 	encr:value("psk2", "WPA2-PSK")
 	encr:value("psk+psk2", "WPA-PSK/WPA2-PSK Mixed Mode")
-elseif hwtype == "mt_dbdc" then
-	encr:value("psk", "WPA-PSK")
-	encr:value("psk2", "WPA2-PSK")
-	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
-	encr:value("sae", "WPA3-PSK")
-	encr:value("sae-mixed", "WPA2-PSK/WPA3-PSK Mixed Mode")
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))
@@ -908,6 +913,9 @@ if hwtype == "mt_dbdc" then
 	wps:depends({mode="ap", encryption="psk"})
 	wps:depends({mode="ap", encryption="psk2"})
 	wps:depends({mode="ap", encryption="psk-mixed"})
+	wps:depends({mode="ap", encryption="wp2"})
+	wps:depends({mode="ap", encryption="wp3"})
+	wps:depends({mode="ap", encryption="wpa3-mixed"})
 	wps:depends({mode="ap", encryption="sae"})
 	wps:depends({mode="ap", encryption="sae-mixed"})
 	pin:depends({wps="pin"})
@@ -961,7 +969,6 @@ if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
 	ieee80211v:depends({mode="ap-wds", encryption="sae"})
 	ieee80211v:depends({mode="ap-wds", encryption="sae-mixed"})
 	ieee80211v.rmempty = true
-
 
 	wnmsleepmode = s:taboption("encryption", Flag, "wnm_sleep_mode", translate("extended sleep mode for stations"))
 	wnmsleepmode.default = wnmsleepmode.disabled

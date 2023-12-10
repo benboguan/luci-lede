@@ -217,20 +217,3 @@ function Cursor.unload(self, ...)
 	end
 	return _unload(self, ...)
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -514,6 +514,14 @@ static int run_daemon(void)
 				iw_checkif("apcliusb%d");
 				iw_checkif("apclii%d");
 				iw_checkif("apcli%d");
+				iw_checkif("rax0%d");
+				iw_checkif("ra0%d");
+				iw_checkif("apclix0usb0%d");
+				iw_checkif("apcli0usb0%d");
+				iw_checkif("apclix0%d");
+				iw_checkif("apcli0%d");
+				iw_checkif("wdsx%d");
+				iw_checkif("wds%d");
 			}
 		}
 
@@ -528,7 +536,7 @@ static int run_daemon(void)
 				if (strstr(line, "TIME_WAIT"))
 					continue;
 
-				if ((strstr(line, "src=127.0.0.1 ") && strstr(line, "dst=127.0.0.1 ")) 
+				if ((strstr(line, "src=127.0.0.1 ") && strstr(line, "dst=127.0.0.1 "))
 				|| (strstr(line, "src=::1 ") && strstr(line, "dst=::1 ")))
 					continue;
 

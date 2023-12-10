@@ -535,6 +535,12 @@ msgstr "指定了错误的地址！"
 msgid "Band"
 msgstr "频宽"
 
+msgid "Kick low RSSI station threshold"
+msgstr "弱信号剔除阈值"
+
+msgid "Station associate threshold"
+msgstr "弱信号接入阈值"
+
 msgid "Behind NAT"
 msgstr "在 NAT 网络内"
 
@@ -2120,6 +2126,9 @@ msgstr "无 NAT-T"
 
 msgid "No chains in this table"
 msgstr "本表中没有链"
+
+msgid "No Encryption"
+msgstr "未加密"
 
 msgid "No files found"
 msgstr "未找到文件"
