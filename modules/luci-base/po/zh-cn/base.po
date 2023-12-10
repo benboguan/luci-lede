@@ -1889,7 +1889,7 @@ msgid "Localise queries"
 msgstr "本地化查询"
 
 msgid "Locked to channel %s used by: %s"
-msgstr "信道道已被锁定为 %s，因为该信道被 %s 使用"
+msgstr "信道已被锁定为 %s，因为该信道被 %s 使用"
 
 msgid "Log output level"
 msgstr "日志记录等级"
@@ -3132,6 +3132,9 @@ msgstr "交换机 VLAN"
 msgid "Switch protocol"
 msgstr "切换协议"
 
+msgid "Sync with NTP-Server"
+msgstr "与 NTP 服务器同步"
+
 msgid "Sync with browser"
 msgstr "同步浏览器时间"
 
@@ -3539,7 +3542,7 @@ msgid "Use DNS servers advertised by peer"
 msgstr "使用对端通告的 DNS 服务器"
 
 msgid "Use ISO/IEC 3166 alpha2 country codes."
-msgstr "参考 ISO/IEC 3166 alpha2 国家代码。"
+msgstr "参考 ISO/IEC 3166 alpha2 国家/地区代码。"
 
 msgid "Use MTU on tunnel interface"
 msgstr "隧道接口的 MTU"
@@ -3852,7 +3855,7 @@ msgid "kbit/s"
 msgstr "kbit/s"
 
 msgid "local <abbr title=\"Domain Name System\">DNS</abbr> file"
-msgstr "本地 <abbr title=\"Domain Name Syste\">DNS</abbr> 解析文件"
+msgstr "本地 <abbr title=\"Domain Name System\">DNS</abbr> 解析文件"
 
 msgid "minimum 1280, maximum 1480"
 msgstr "最小值 1280，最大值 1480"
