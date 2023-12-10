@@ -212,7 +212,7 @@ encr.override_values = true
 encr:value("none", "No Encryption")
 encr:value("wep", "WEP")
 
-if hwtype == "mac80211" then
+if hwtype == "mac80211" or hwtype == "mt_dbdc" then
 	local supplicant = fs.access("/usr/sbin/wpa_supplicant")
 	local hostapd    = fs.access("/usr/sbin/hostapd")
 
@@ -241,7 +241,7 @@ if hwtype == "mac80211" then
 		encr.description = translate(
 			"WPA-Encryption requires wpa_supplicant (for client mode) or hostapd (for AP " ..
 			"and ad-hoc mode) to be installed."
-		)		
+		)
 	else
 		encr.description = translate(
 			"WPA-Encryption requires wpa_supplicant (for client mode) or hostapd (for AP " ..
@@ -252,10 +252,6 @@ elseif hwtype == "broadcom" then
 	encr:value("psk", "WPA-PSK")
 	encr:value("psk2", "WPA2-PSK")
 	encr:value("psk+psk2", "WPA-PSK/WPA2-PSK Mixed Mode")
-elseif hwtype == "mt_dbdc" then
-	encr:value("psk", "WPA-PSK")
-	encr:value("psk2", "WPA2-PSK")
-	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
 end
 
 key = s:option(Value, "key", translate("Key"))
@@ -280,7 +276,7 @@ port:depends({mode="ap", encryption="wpa2"})
 port.rmempty = true
 
 
-if hwtype == "mac80211" then
+if hwtype == "mac80211" or hwtype == "mt_dbdc" then
 	nasid = s:option(Value, "nasid", translate("NAS ID"))
 	nasid:depends({mode="ap", encryption="wpa"})
 	nasid:depends({mode="ap", encryption="wpa2"})
