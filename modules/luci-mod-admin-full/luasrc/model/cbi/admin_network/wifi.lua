@@ -726,7 +726,7 @@ encr:value("none", "No Encryption")
 encr:value("wep-open",   translate("WEP Open System"), {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 encr:value("wep-shared", translate("WEP Shared Key"),  {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 
-if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
+if hwtype == "mac80211" or hwtype == "prism2" then
 	local supplicant = fs.access("/usr/sbin/wpa_supplicant")
 	local hostapd = fs.access("/usr/sbin/hostapd")
 
@@ -792,6 +792,12 @@ elseif hwtype == "broadcom" then
 	encr:value("psk", "WPA-PSK")
 	encr:value("psk2", "WPA2-PSK")
 	encr:value("psk+psk2", "WPA-PSK/WPA2-PSK Mixed Mode")
+elseif hwtype == "mt_dbdc" then
+	encr:value("psk", "WPA-PSK")
+	encr:value("psk2", "WPA2-PSK")
+	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
+	encr:value("sae", "WPA3-SAE")
+	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))
@@ -913,9 +919,6 @@ if hwtype == "mt_dbdc" then
 	wps:depends({mode="ap", encryption="psk"})
 	wps:depends({mode="ap", encryption="psk2"})
 	wps:depends({mode="ap", encryption="psk-mixed"})
-	wps:depends({mode="ap", encryption="wp2"})
-	wps:depends({mode="ap", encryption="wp3"})
-	wps:depends({mode="ap", encryption="wpa3-mixed"})
 	wps:depends({mode="ap", encryption="sae"})
 	wps:depends({mode="ap", encryption="sae-mixed"})
 	pin:depends({wps="pin"})
