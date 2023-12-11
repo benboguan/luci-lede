@@ -14,17 +14,8 @@
 		]
 	};
 
-	for (var i = 0; i < freqlist.length; i++) {
-		var hwmode;
-
-		if (freqlist[i].mhz >= 2412 && freqlist[i].mhz <= 2484)
-			hwmode = '11g';
-		else if (freqlist[i].mhz >= 5160 && freqlist[i].mhz <= 5885)
-			hwmode = '11a';
-		else
-			continue;
-
-		channels[hwmode].push(
+	for (var i = 0; i < freqlist.length; i++)
+		channels[(freqlist[i].mhz > 2484) ? '11a' : '11g'].push(
 			freqlist[i].channel,
 			'%d (%d MHz)'.format(freqlist[i].channel, freqlist[i].mhz),
 			!freqlist[i].restricted
