@@ -563,7 +563,7 @@ msgstr ""
 msgid "Check"
 msgstr ""
 
-msgid "Check fileystems before mount"
+msgid "Check filesystems before mount"
 msgstr ""
 
 msgid "Check this option to delete the existing networks from this radio."
@@ -1973,6 +1973,9 @@ msgid "Next »"
 msgstr ""
 
 msgid "No DHCP Server configured for this interface"
+msgstr ""
+
+msgid "No Encryption"
 msgstr ""
 
 msgid "No NAT-T"
