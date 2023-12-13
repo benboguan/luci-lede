@@ -514,14 +514,6 @@ static int run_daemon(void)
 				iw_checkif("apcliusb%d");
 				iw_checkif("apclii%d");
 				iw_checkif("apcli%d");
-				iw_checkif("rax0%d");
-				iw_checkif("ra0%d");
-				iw_checkif("apclix0usb0%d");
-				iw_checkif("apcli0usb0%d");
-				iw_checkif("apclix0%d");
-				iw_checkif("apcli0%d");
-				iw_checkif("wdsx%d");
-				iw_checkif("wds%d");
 			}
 		}
 
