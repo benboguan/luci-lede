@@ -23,7 +23,7 @@ module "luci.model.network"
 
 IFACE_PATTERNS_VIRTUAL  = { }
 IFACE_PATTERNS_IGNORE   = { "^wmaster%d", "^wifi%d", "^hwsim%d", "^imq%d", "^ifb%d", "^mon%.wlan%d", "^sit%d", "^gre%d", "^gretap%d", "^ip6gre%d", "^ip6tnl%d", "^tunl%d", "^lo$" }
-IFACE_PATTERNS_WIRELESS = { "^wlan%d", "^wl%d", "^ath%d", "^rausb%d", "^rax%d", "^rax0%d", "^rai%d", "^ra0%d", "^ra%d", "^wdsi%d", "^wdsx%d", "^wds%d", "^apclii%d", "^apclix0%d", "^apcli%d", "^apcli0%d", "^apclix0usb0%d", "^apcliusb%d", "^apcli0usb0%d", "^%w+%.network%d" }
+IFACE_PATTERNS_WIRELESS = { "^wlan%d", "^wl%d", "^ath%d", "^rausb%d", "^rai%d", "^rax%d", "^ra%d", "^wdsi%d", "^wdsx%d", "^wds%d", "^apclii%d", "^apclix%d", "^apcli%d", "^apcliusb%d", "^%w+%.network%d" }
 
 
 protocol = utl.class()
@@ -1367,8 +1367,6 @@ function wifidev.get_i18n(self)
 	local t = "Generic"
 	if self.iwinfo.type == "wl" then
 		t = "Broadcom"
-	elseif self.iwinfo.type == "ra" then
-		t = "Ralink/MediaTek"
 	elseif self.iwinfo.type == "mtk" then
 		t = "MediaTek"
 	end
@@ -1540,7 +1538,7 @@ end
 
 function wifinet.ifname(self)
 	local ifname = self:ubus("net", "ifname") or self.iwinfo.ifname
-	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra") or ifname:match("^rai") or ifname:match("^ra0") or ifname:match("^rax0") or ifname:match("^rax") then
+	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra") or ifname:match("^rai")  then
 		ifname = self.wdev
 	end
 	return ifname
@@ -1618,7 +1616,7 @@ function wifinet.noise(self)
 end
 
 function wifinet.country(self)
-	return self.iwinfo.country or self:ubus("dev", "config", "country")
+	return self.iwinfo.country or self:ubus("dev", "config", "country") or "US"
 end
 
 function wifinet.txpower(self)
