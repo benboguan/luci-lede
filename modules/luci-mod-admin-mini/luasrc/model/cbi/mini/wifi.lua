@@ -333,7 +333,7 @@ if hwtype == "mac80211" then
 end
 
 
-if hwtype == "broadcom" or hwtype == "mt_dbdc" then
+if hwtype == "broadcom" then
 	iso = s:option(Flag, "isolate", translate("AP-Isolation"), translate("Prevents Client to Client communication"))
 	iso.rmempty = true
 	iso:depends("mode", "ap")

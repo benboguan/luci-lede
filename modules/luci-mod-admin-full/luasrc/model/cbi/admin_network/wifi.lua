@@ -398,8 +398,11 @@ if hwtype == "mt_dbdc" then
 		s:taboption("advanced", Value, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
 	end
 
+	s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"))
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
+	s:taboption("advanced", Value, "distance", translate("Distance Optimization"),
+		translate("Distance to farthest network member in meters."))
 	s:taboption("advanced", Flag, "txburst", translate("TX Bursting"))
 	
 	o = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
@@ -617,10 +620,69 @@ end
 ----------------------- MT7615/MT7915 Interface ---------------------
 
 if hwtype == "mt_dbdc" then
+	if fs.access("/usr/sbin/iw") then
+		mode:value("mesh", "802.11s")
+	end
+
+	mode:value("wds", translate("WDS"))
+	mode:value("ahdemo", translate("Pseudo Ad-Hoc (ahdemo)"))
+	--mode:value("monitor", translate("Monitor"))
+	mode:value("ap-wds", "%s (%s)" % {translate("Access Point"), translate("WDS")})
+	mode:value("sta-wds", "%s (%s)" % {translate("Client"), translate("WDS")})
+	mode:value("wds", translate("Static WDS"))
+
+	function mode.write(self, section, value)
+		if value == "ap-wds" then
+			ListValue.write(self, section, "ap")
+			m.uci:set("wireless", section, "wds", 1)
+		elseif value == "sta-wds" then
+			ListValue.write(self, section, "sta")
+			m.uci:set("wireless", section, "wds", 1)
+		else
+			ListValue.write(self, section, value)
+			m.uci:delete("wireless", section, "wds")
+		end
+	end
+
+	function mode.cfgvalue(self, section)
+		local mode = ListValue.cfgvalue(self, section)
+		local wds  = m.uci:get("wireless", section, "wds") == "1"
+
+		if mode == "ap" and wds then
+			return "ap-wds"
+		elseif mode == "sta" and wds then
+			return "sta-wds"
+		else
+			return mode
+		end
+	end
+
+	bssid:depends({mode="wds"})
+
+	s:taboption("general", DummyValue,"note_wds" ,translate("Note"), translate("WDS mode is only available between Ralink/MTK devices.")):depends({mode="wds"})
+
+	phymode = s:taboption("advanced", ListValue, "wdsphymode", translate("WDS PHY Mode"), translate("If GREENFIELD seems to be unstable,try to use OFDM instead.VHT is only available for 11AC devices."))
+	phymode:depends({mode="wds"})
+	phymode:value("CCK")
+	phymode:value("OFDM")
+	phymode:value("HTMIX")
+	phymode:value("GREENFIELD")
+	phymode:value("VHT")
+	phymode.default="GREENFIELD"
+
+	bssid:depends({mode="adhoc"})
 	bssid:depends({mode="sta"})
+	bssid:depends({mode="sta-wds"})
+	bssid:depends({mode="wds"})
+
+	ssid:depends({mode="sta"})
+	ssid:depends({mode="sta-wds"})
+	ssid:depends({mode="ap"})
+	ssid:depends({mode="adhoc"})
 
 	mp = s:taboption("macfilter", ListValue, "macfilter", translate("MAC-Address Filter"))
 	mp:depends({mode="ap"})
+	mp:depends({mode="ap-wds"})
 	mp:value("", translate("disable"))
 	mp:value("allow", translate("Allow listed only"))
 	mp:value("deny", translate("Allow all except listed"))
@@ -631,8 +693,16 @@ if hwtype == "mt_dbdc" then
 	ml:depends({macfilter="deny"})
 	nt.mac_hints(function(mac, name) ml:value(mac, "%s (%s)" %{ mac, name }) end)
 
+	mode:value("ap-wds", "%s (%s)" % {translate("Access Point"), translate("WDS")})
+	mode:value("sta-wds", "%s (%s)" % {translate("Client"), translate("WDS")})
+	
+	ifname = s:taboption("advanced", Value, "ifname", translate("Interface name"), translate("Override default interface name"))
+	ifname.optional = true
+
 	hidden = s:taboption("general", Flag, "hidden", translate("Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"))
 	hidden:depends({mode="ap"})
+	hidden:depends({mode="ap-wds"})
+	hidden:depends({mode="sta-wds"})
 
 	isolate = s:taboption("advanced", Flag, "isolate", translate("Isolate Clients"),
 	 translate("Prevents client-to-client communication"))
@@ -722,7 +792,7 @@ function cipher.write(self, section)
 end
 
 
-encr:value("none", "No Encryption")
+encr:value("none", translate("No Encryption"))
 encr:value("wep-open",   translate("WEP Open System"), {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 encr:value("wep-shared", translate("WEP Shared Key"),  {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 
@@ -798,6 +868,29 @@ elseif hwtype == "mt_dbdc" then
 	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
 	encr:value("sae", "WPA3-SAE")
 	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
+end
+
+if hwtype == "rtwifi" or hwtype == "mt_dbdc" then
+	encr_wds = s:taboption("encryption", ListValue, "wdsenctype", translate("Encryption"))
+	encr_wds:depends({mode="wds"})
+	encr_wds:value("none", translate("No Encryption"))
+	encr_wds:value("wep-open", translate("WEP Open System"))
+	encr_wds:value("wep-shared", translate("WEP Shared Key"))
+	encr_wds:value("psk", "WPA-PSK")
+	encr_wds:value("psk2", "WPA2-PSK")
+	encr_wds:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
+	encr_wds:value("sae", "WPA3-SAE")
+	encr_wds:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
+
+	wdskey = s:taboption("encryption", Value, "wdskey", translate("Key"))
+	wdskey.password = true
+	wdskey:depends("wdsenctype", "wep-open")
+	wdskey:depends("wdsenctype", "wep-shared")
+	wdskey:depends("wdsenctype", "psk")
+	wdskey:depends("wdsenctype", "psk2")
+	wdskey:depends("wdsenctype", "psk-mixed")
+	wdskey:depends("wdsenctype", "sae")
+	wdskey:depends("wdsenctype", "sae-mixed")
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))

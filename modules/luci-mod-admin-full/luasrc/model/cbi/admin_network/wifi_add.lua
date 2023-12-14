@@ -63,14 +63,14 @@ if http.formvalue("wep") == "1" then
 	key.datatype = "wepkey"
 
 elseif (tonumber(m.hidden.wpa_version) or 0) > 0 and
-	(m.hidden.wpa_suites == "PSK" or m.hidden.wpa_suites == "PSK2")
+	(m.hidden.wpa_suites == "PSK" or m.hidden.wpa_suites == "PSK2" or m.hidden.wpa_suites == "WPA3" or m.hidden.wpa_suites == "SAE")
 then
 	key = m:field(Value, "key", translate("WPA passphrase"),
 		translate("Specify the secret encryption key here."))
 
 	key.password = true
 	key.datatype = "wpakey"
-	--m.hidden.wpa_suite = (tonumber(http.formvalue("wpa_version")) or 0) >= 2 and "psk2" or "psk"
+	--m.hidden.wpa_suite = (tonumber(http.formvalue("wpa_version")) or 0) >= 2 and "sae" or "wpa3" or "psk2" or "psk"
 end
 
 newnet = m:field(Value, "_netname_new", translate("Name of the new network"),
@@ -128,7 +128,7 @@ function newnet.parse(self, section)
 		wconf.key        = "1"
 		wconf.key1       = key and key:formvalue(section) or ""
 	elseif (tonumber(m.hidden.wpa_version) or 0) > 0 then
-		wconf.encryption = (tonumber(m.hidden.wpa_version) or 0) >= 2 and "psk2" or "psk"
+		wconf.encryption = (tonumber(m.hidden.wpa_version) or 0) >= 2 and "sae" or "wpa3" or "psk2" or "psk"
 		wconf.key        = key and key:formvalue(section) or ""
 	else
 		wconf.encryption = "none"

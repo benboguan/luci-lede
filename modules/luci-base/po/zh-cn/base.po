@@ -2128,7 +2128,7 @@ msgid "No chains in this table"
 msgstr "本表中没有链"
 
 msgid "No Encryption"
-msgstr "未加密"
+msgstr "不加密"
 
 msgid "No files found"
 msgstr "未找到文件"
@@ -2177,6 +2177,9 @@ msgstr "无"
 
 msgid "Normal"
 msgstr "正常"
+
+msgid "Note"
+msgstr "注意"
 
 msgid "Not Found"
 msgstr "未找到"
@@ -4150,3 +4153,12 @@ msgstr "弱信号剔除阈值"
 
 msgid "STA Assoc Threshold"
 msgstr "弱信号接入阈值"
+
+msgid "WDS mode is only available between Ralink/MTK devices."
+msgstr "WDS 模式仅在 Ralink/MTK 设备之间可用。"
+
+msgid "WDS PHY Mode"
+msgstr "WDS PHY 模式"
+
+msgid "If GREENFIELD seems to be unstable,try to use OFDM instead.VHT is only available for 11AC devices."
+msgstr "如果 GREENFIELD 看起来不稳定，请尝试改用 OFDM。VHT 仅适用于 11AC 设备。"
