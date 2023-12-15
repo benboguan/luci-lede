@@ -47,7 +47,9 @@
 			return translatef("<abbr title='Pairwise: %s / Group: %s'>%s - %s</abbr>",
 				table.concat(info.pair_ciphers, ", "),
 				table.concat(info.group_ciphers, ", "),
-				(info.wpa == 3) and translate("mixed WPA/WPA2")
+				(info.wpa == 5) and translate("mixed WPA2/WPA3")
+					or (info.wpa == 4) and translate("WPA3")
+					or (info.wpa == 3) and translate("mixed WPA/WPA2")
 					or (info.wpa == 2 and "WPA2" or "WPA"),
 				table.concat(info.auth_suites, ", ")
 			)
@@ -121,7 +123,7 @@
 						<input type="hidden" name="channel" value="<%=net.channel%>" />
 						<input type="hidden" name="wep" value="<%=net.encryption.wep and 1 or 0%>" />
 						<% if net.encryption.wpa then %>
-						<input type="hidden" name="wpa_version" value="<%=net.encryption.wpa%>" />
+						<input type="hidden" name="wpa_version" value="<%=net.encryption.wpa or info.wpa%>" />
 						<% for _, v in ipairs(net.encryption.auth_suites) do %><input type="hidden" name="wpa_suites" value="<%=v%>" />
 						<% end; for _, v in ipairs(net.encryption.group_ciphers) do %><input type="hidden" name="wpa_group" value="<%=v%>" />
 						<% end; for _, v in ipairs(net.encryption.pair_ciphers) do %><input type="hidden" name="wpa_pairwise" value="<%=v%>" />
