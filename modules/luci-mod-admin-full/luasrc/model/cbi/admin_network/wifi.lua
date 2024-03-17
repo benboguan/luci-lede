@@ -197,16 +197,13 @@ else
 		m:set(section, "htmode", value[3])
 	end
 
-	-------------------------------support 11g------------------------------
-	if hw_modes.g then
-		noscan = s:taboption("general", Flag, "noscan", translate("Force 40MHz mode"),
-			translate("Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!"))
-		noscan.default = noscan.enabled
+	noscan = s:taboption("general", Flag, "noscan", translate("Force 40MHz mode"),
+		translate("Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!"))
+	noscan.default = noscan.enabled
 
-		vendor_vht = s:taboption("advanced", Flag, "vendor_vht", translate("Enable 256QAM modulation"),
-			translate("802.11n 2.4Ghz only, may not supported by some hardware!"))
-		vendor_vht.default = vendor_vht.enabled
-	end
+	vendor_vht = s:taboption("general", Flag, "vendor_vht", translate("Enable 256QAM modulation"),
+		translate("802.11n 2.4Ghz only, may not supported by some hardware!"))
+	vendor_vht.default = vendor_vht.enabled
 end
 
 ------------------- MAC80211 Device ------------------
@@ -362,24 +359,6 @@ end
 
 --------------------- MT7615/MT7915 Device ---------------------
 if hwtype == "mt_dbdc" then
-	if #tx_power_list > 0 then
-		tp = s:taboption("general", ListValue,
-			"txpower", translate("Transmit Power"), "dBm")
-		tp.rmempty = true
-		tp.default = tx_power_cur
-		function tp.cfgvalue(...)
-			return txpower_current(Value.cfgvalue(...), tx_power_list)
-		end
-
-		tp:value("", translate("auto"))
-		for _, p in ipairs(tx_power_list) do
-		  if p.display_dbm < 50 then
-			tp:value(p.driver_dbm, "%i dBm (%i mW)"
-				%{ p.display_dbm, p.display_mw })
-		  end
-		end
-	end
-
 	local cl = iw and iw.countrylist
 	if cl and #cl > 0 then
 		cc = s:taboption("advanced", ListValue, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
@@ -391,25 +370,39 @@ if hwtype == "mt_dbdc" then
 		s:taboption("advanced", Value, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
 	end
 
-	legacyrates = s:taboption("advanced", Flag, "legacy_rates", translate("Allow legacy 802.11b rates"),
+	txpower = s:taboption("general", ListValue, "txpower", translate("Transmit Power"), "dBm")
+	txpower:value("100", translate("91~100%"))
+	txpower:value("75", translate("61~90%"))
+	txpower:value("50", translate("31~60%"))
+	txpower:value("25", translate("16~30%"))
+	txpower:value("12", translate("10~15%"))
+	txpower:value("4", translate("1~9%"))
+	txpower.default = "100"
+
+	legacyrates = s:taboption("general", Flag, "legacy_rates", translate("Allow legacy 802.11b rates"),
 		translate("Legacy or badly behaving devices may require legacy 802.11b rates to interoperate. " ..
 			"Airtime efficiency may be significantly reduced where these are used. It is recommended " ..
 			"to not allow 802.11b rates where possible."))
 	legacyrates.rmempty = false
 	legacyrates.default = "0"
 
-	mubeamformer = s:taboption("advanced", Flag, "mu_beamformer", translate("MU-MIMO"))
-	mubeamformer.rmempty = false
+	mubeamformer = s:taboption("advanced", ListValue, "mu_beamformer", translate("MU-MIMO"))
+	mubeamformer:value("0", translate("Disabled"))
+	mubeamformer:value("1", translate("Enable"))
+	mubeamformer:value("3", translate("Enable for MTK Repeater mode"))
 	mubeamformer.default = "0"
 
-	s:taboption("advanced", Flag, "doth", "802.11h")
+	doth = s:taboption("advanced", Flag, "doth", translate("802.11h"))
+	doth.default = doth.disabled
 
-	s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
+	whnat = s:taboption("advanced", Flag, "whnat", translate("Wireless HWNAT"))
+	whnat.default = whnat.enabled
+
+	txburst = s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
+	txburst.default = txburst.enabled
 
 	s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"))
-
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
-
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
 	
 	beacon_int = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
@@ -730,17 +723,17 @@ if hwtype == "mt_dbdc" then
 	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"), translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
 	macaddr.optional = true
 
-	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
+	disassoc_low_ack = s:taboption("advanced", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
 	disassoc_low_ack.default = disassoc_low_ack.disabled
 	disassoc_low_ack:depends({mode="ap"})
 
-	rssikick= s:taboption("general", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
+	rssikick= s:taboption("advanced", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
 	rssikick.optional    = true
 	rssikick.placeholder = -75
 	rssikick.datatype = "range(-100,0)"
 	rssikick:depends("disassoc_low_ack", "1")
 
-	rssiassoc= s:taboption("general", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
+	rssiassoc= s:taboption("advanced", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
 	rssiassoc.optional    = true
 	rssiassoc.placeholder = -65
 	rssiassoc.datatype    = "range(-100,0)"
@@ -757,7 +750,7 @@ encr:depends({mode="sta"})
 encr:depends({mode="adhoc"})
 encr:depends({mode="ahdemo"})
 encr:depends({mode="ap-wds"})
-encr:depends({mode="sta-wds"})
+encr:depends({mode="wds"})
 encr:depends({mode="mesh"})
 
 cipher = s:taboption("encryption", ListValue, "cipher", translate("Cipher"))

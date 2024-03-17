@@ -1049,6 +1049,9 @@ msgstr "紧急"
 msgid "Enable"
 msgstr "启用"
 
+msgid "Enable for MTK Repeater mode"
+msgstr "MTK 无线中继时启用"
+
 msgid ""
 "Enable <abbr title=\"Internet Group Management Protocol\">IGMP</abbr> "
 "snooping"
@@ -4167,6 +4170,9 @@ msgstr "时区"
 
 msgid "Local time zone as specified in 8.3 of IEEE Std 1003.1-2004"
 msgstr "本地时区采用 IEEE Std 1003.1-2004 的 8.3 格式（例如 UTC8）"
+
+msgid "Wireless HWNAT"
+msgstr "无线硬件加速"
 
 msgid "Enable 256-QAM"
 msgstr "启用 256-QAM"
