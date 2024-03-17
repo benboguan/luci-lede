@@ -99,8 +99,8 @@ local function txpower_current(pwr, list)
 	if pwr ~= nil then
 		local _, item
 		for _, item in ipairs(list) do
-			if item.driver_mw >= pwr then
-				return item.driver_mw
+			if item.driver_dbm >= pwr then
+				return item.driver_dbm
 			end
 		end
 	end
@@ -201,10 +201,11 @@ else
 	if hw_modes.g then
 		noscan = s:taboption("general", Flag, "noscan", translate("Force 40MHz mode"),
 			translate("Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!"))
-		noscan.default = noscan.disabled
+		noscan.default = noscan.enabled
 
-		vendor_vht = s:taboption("general", Flag, "vendor_vht", translate("Enable 256-QAM"),translate("802.11n 2.4Ghz Only"))
-		vendor_vht.default = vendor_vht.disabled
+		vendor_vht = s:taboption("advanced", Flag, "vendor_vht", translate("Enable 256QAM modulation"),
+			translate("802.11n 2.4Ghz only, may not supported by some hardware!"))
+		vendor_vht.default = vendor_vht.enabled
 	end
 end
 
@@ -363,7 +364,7 @@ end
 if hwtype == "mt_dbdc" then
 	if #tx_power_list > 0 then
 		tp = s:taboption("general", ListValue,
-			"txpower", translate("Transmit Power"), "mW")
+			"txpower", translate("Transmit Power"), "dBm")
 		tp.rmempty = true
 		tp.default = tx_power_cur
 		function tp.cfgvalue(...)
@@ -372,20 +373,12 @@ if hwtype == "mt_dbdc" then
 
 		tp:value("", translate("auto"))
 		for _, p in ipairs(tx_power_list) do
-			tp:value(p.driver_mw, "%i mW (%i dBm)"
-				%{ p.display_mw, p.display_dbm })
+		  if p.display_dbm < 50 then
+			tp:value(p.driver_dbm, "%i dBm (%i mW)"
+				%{ p.display_dbm, p.display_mw })
+		  end
 		end
 	end
-
-	-------------------------------support 11ac------------------------------
-	if hw_modes.ac then
-		mubeamformer = s:taboption("advanced", Flag, "mu_beamformer", translate("MU-MIMO"))
-		mubeamformer.rmempty = false
-		mubeamformer.default = "0"
-	end
-
-	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"))
-	wmm.default = wmm.enabled
 
 	local cl = iw and iw.countrylist
 	if cl and #cl > 0 then
@@ -398,17 +391,36 @@ if hwtype == "mt_dbdc" then
 		s:taboption("advanced", Value, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
 	end
 
+	legacyrates = s:taboption("advanced", Flag, "legacy_rates", translate("Allow legacy 802.11b rates"),
+		translate("Legacy or badly behaving devices may require legacy 802.11b rates to interoperate. " ..
+			"Airtime efficiency may be significantly reduced where these are used. It is recommended " ..
+			"to not allow 802.11b rates where possible."))
+	legacyrates.rmempty = false
+	legacyrates.default = "0"
+
+	mubeamformer = s:taboption("advanced", Flag, "mu_beamformer", translate("MU-MIMO"))
+	mubeamformer.rmempty = false
+	mubeamformer.default = "0"
+
+	s:taboption("advanced", Flag, "doth", "802.11h")
+
+	s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
+
 	s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"))
+
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
+
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
-	s:taboption("advanced", Value, "distance", translate("Distance Optimization"),
-		translate("Distance to farthest network member in meters."))
-	s:taboption("advanced", Flag, "txburst", translate("TX Bursting"))
 	
-	o = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
-	o.datatype = 'range(15,65535)';
-	o.placeholder = 100;
-	o.rmempty = true;
+	beacon_int = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
+	beacon_int.datatype = 'range(15,65535)';
+	beacon_int.placeholder = 100;
+	beacon_int.rmempty = true;
+
+	dtim_period = s:taboption("advanced", Value, "dtim_period", translate("DTIM Interval"),
+		translate("Delivery Traffic Indication Message Interval"))
+	dtim_period.optional = true
+	dtim_period.placeholder = 2
 end
 
 ----------------------- Interface -----------------------
@@ -624,19 +636,32 @@ if hwtype == "mt_dbdc" then
 		mode:value("mesh", "802.11s")
 	end
 
+	mode:value("monitor", translate("Monitor"))
 	mode:value("wds", translate("WDS"))
-	mode:value("ahdemo", translate("Pseudo Ad-Hoc (ahdemo)"))
-	--mode:value("monitor", translate("Monitor"))
+	bssid:depends({mode="adhoc"})
+	bssid:depends({mode="sta"})
+	bssid:depends({mode="wds"})
+
+	mp = s:taboption("macfilter", ListValue, "macfilter", translate("MAC-Address Filter"))
+	mp:depends({mode="ap"})
+	mp:value("", translate("disable"))
+	mp:value("allow", translate("Allow listed only"))
+	mp:value("deny", translate("Allow all except listed"))
+
+	ml = s:taboption("macfilter", DynamicList, "maclist", translate("MAC-List"))
+	ml.datatype = "macaddr"
+	ml:depends({macfilter="allow"})
+	ml:depends({macfilter="deny"})
+	nt.mac_hints(function(mac, name) ml:value(mac, "%s (%s)" %{ mac, name }) end)
+
 	mode:value("ap-wds", "%s (%s)" % {translate("Access Point"), translate("WDS")})
-	mode:value("sta-wds", "%s (%s)" % {translate("Client"), translate("WDS")})
-	mode:value("wds", translate("Static WDS"))
 
 	function mode.write(self, section, value)
 		if value == "ap-wds" then
 			ListValue.write(self, section, "ap")
 			m.uci:set("wireless", section, "wds", 1)
-		elseif value == "sta-wds" then
-			ListValue.write(self, section, "sta")
+		elseif value == "wds" then
+			ListValue.write(self, section, "wds")
 			m.uci:set("wireless", section, "wds", 1)
 		else
 			ListValue.write(self, section, value)
@@ -650,14 +675,29 @@ if hwtype == "mt_dbdc" then
 
 		if mode == "ap" and wds then
 			return "ap-wds"
-		elseif mode == "sta" and wds then
-			return "sta-wds"
+		elseif mode == "wds" then
+			return "wds"
 		else
 			return mode
 		end
 	end
 
-	bssid:depends({mode="wds"})
+	map = s:taboption("general", ListValue, "mapmode", translate("Mesh Mode"))
+	map:depends({mode="mesh"})
+	map:value("0", translate("Disable"))
+	map:value("1", translate("Map Turnkey"))
+	map:value("2", translate("BS 2.0"))
+	map:value("3", translate("API Mode"))
+	map:value("4", translate("Cert"))
+	map.default = "0"
+
+	wdsen = s:taboption("general", ListValue, "wdsen", translate("WDS Mode"))
+	wdsen:depends({mode="wds"})
+	wdsen:value("0", translate("Disable"))
+	wdsen:value("2", translate("Bridge Mode"))
+	wdsen:value("3", translate("Repeater Mode"))
+	wdsen:value("4", translate("Lazy Mode"))
+	wdsen.default = "0"
 
 	s:taboption("general", DummyValue,"note_wds" ,translate("Note"), translate("WDS mode is only available between Ralink/MTK devices.")):depends({mode="wds"})
 
@@ -670,59 +710,39 @@ if hwtype == "mt_dbdc" then
 	phymode:value("VHT")
 	phymode.default="GREENFIELD"
 
-	bssid:depends({mode="adhoc"})
-	bssid:depends({mode="sta"})
-	bssid:depends({mode="sta-wds"})
-	bssid:depends({mode="wds"})
-
-	ssid:depends({mode="sta"})
-	ssid:depends({mode="sta-wds"})
-	ssid:depends({mode="ap"})
-	ssid:depends({mode="adhoc"})
-
-	mp = s:taboption("macfilter", ListValue, "macfilter", translate("MAC-Address Filter"))
-	mp:depends({mode="ap"})
-	mp:depends({mode="ap-wds"})
-	mp:value("", translate("disable"))
-	mp:value("allow", translate("Allow listed only"))
-	mp:value("deny", translate("Allow all except listed"))
-
-	ml = s:taboption("macfilter", DynamicList, "maclist", translate("MAC-List"))
-	ml.datatype = "macaddr"
-	ml:depends({macfilter="allow"})
-	ml:depends({macfilter="deny"})
-	nt.mac_hints(function(mac, name) ml:value(mac, "%s (%s)" %{ mac, name }) end)
-
-	mode:value("ap-wds", "%s (%s)" % {translate("Access Point"), translate("WDS")})
-	mode:value("sta-wds", "%s (%s)" % {translate("Client"), translate("WDS")})
-	
-	ifname = s:taboption("advanced", Value, "ifname", translate("Interface name"), translate("Override default interface name"))
-	ifname.optional = true
-
 	hidden = s:taboption("general", Flag, "hidden", translate("Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"))
 	hidden:depends({mode="ap"})
 	hidden:depends({mode="ap-wds"})
-	hidden:depends({mode="sta-wds"})
+
+	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"))
+	wmm:depends({mode="ap"})
+	wmm:depends({mode="ap-wds"})
+	wmm.default = wmm.enabled
 
 	isolate = s:taboption("advanced", Flag, "isolate", translate("Isolate Clients"),
 	 translate("Prevents client-to-client communication"))
 	isolate:depends({mode="ap"})
+	isolate:depends({mode="ap-wds"})
 
-	s:taboption("advanced", Flag, "doth", "802.11h")
+	short_preamble = s:taboption("advanced", Flag, "short_preamble", translate("Short Preamble"))
+	short_preamble.default = short_preamble.enabled
+
+	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"), translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
+	macaddr.optional = true
 
 	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
 	disassoc_low_ack.default = disassoc_low_ack.disabled
 	disassoc_low_ack:depends({mode="ap"})
-	
-	rssikick= s:taboption("general", Value, "rssikick", translate("Kick low RSSI station threshold"), translate("dBm"));
+
+	rssikick= s:taboption("general", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
 	rssikick.optional    = true
-	rssikick.placeholder = 75
+	rssikick.placeholder = -75
 	rssikick.datatype = "range(-100,0)"
 	rssikick:depends("disassoc_low_ack", "1")
 
-	rssiassoc= s:taboption("general", Value, "rssiassoc", translate("Station associate threshold"), translate("dBm"));
+	rssiassoc= s:taboption("general", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
 	rssiassoc.optional    = true
-	rssiassoc.placeholder = 60
+	rssiassoc.placeholder = -65
 	rssiassoc.datatype    = "range(-100,0)"
 	rssiassoc:depends("disassoc_low_ack", "1")
 end
@@ -743,6 +763,8 @@ encr:depends({mode="mesh"})
 cipher = s:taboption("encryption", ListValue, "cipher", translate("Cipher"))
 cipher:depends({encryption="wpa"})
 cipher:depends({encryption="wpa2"})
+cipher:depends({encryption="wpa3"})
+cipher:depends({encryption="wpa3-mixed"})
 cipher:depends({encryption="psk"})
 cipher:depends({encryption="psk2"})
 cipher:depends({encryption="wpa-mixed"})
@@ -863,34 +885,11 @@ elseif hwtype == "broadcom" then
 	encr:value("psk2", "WPA2-PSK")
 	encr:value("psk+psk2", "WPA-PSK/WPA2-PSK Mixed Mode")
 elseif hwtype == "mt_dbdc" then
-	encr:value("psk", "WPA-PSK")
-	encr:value("psk2", "WPA2-PSK")
-	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
-	encr:value("sae", "WPA3-SAE")
-	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
-end
-
-if hwtype == "rtwifi" or hwtype == "mt_dbdc" then
-	encr_wds = s:taboption("encryption", ListValue, "wdsenctype", translate("Encryption"))
-	encr_wds:depends({mode="wds"})
-	encr_wds:value("none", translate("No Encryption"))
-	encr_wds:value("wep-open", translate("WEP Open System"))
-	encr_wds:value("wep-shared", translate("WEP Shared Key"))
-	encr_wds:value("psk", "WPA-PSK")
-	encr_wds:value("psk2", "WPA2-PSK")
-	encr_wds:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
-	encr_wds:value("sae", "WPA3-SAE")
-	encr_wds:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
-
-	wdskey = s:taboption("encryption", Value, "wdskey", translate("Key"))
-	wdskey.password = true
-	wdskey:depends("wdsenctype", "wep-open")
-	wdskey:depends("wdsenctype", "wep-shared")
-	wdskey:depends("wdsenctype", "psk")
-	wdskey:depends("wdsenctype", "psk2")
-	wdskey:depends("wdsenctype", "psk-mixed")
-	wdskey:depends("wdsenctype", "sae")
-	wdskey:depends("wdsenctype", "sae-mixed")
+	encr:value("psk", "WPA-PSK", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="wds"}, {mode="adhoc"})
+	encr:value("psk2", "WPA2-PSK", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="wds"}, {mode="adhoc"})
+	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="adhoc"})
+	encr:value("sae", "WPA3-SAE", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="wds"}, {mode="adhoc"}, {mode="mesh"})
+	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="adhoc"}, {mode="mesh"})
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))
@@ -1004,17 +1003,17 @@ for slot=1,4 do
 end
 
 if hwtype == "mt_dbdc" then
-	wps = s:taboption("encryption", ListValue, "wps", translate("WPS Mode"))
+	wps = s:taboption("encryption", ListValue, "wps_pushbutton", translate("WPS Mode"))
 	wps:value("", translate("disable"))
-	wps:value("pbc", translate("PBC"))
-	wps:value("pin", translate("PIN"))
+	wps:value("1", translate("PIN"))
+	wps:value("2", translate("PBC"))
 	pin = s:taboption("encryption", Value, "pin", translate("WPS PIN"))
 	wps:depends({mode="ap", encryption="psk"})
 	wps:depends({mode="ap", encryption="psk2"})
 	wps:depends({mode="ap", encryption="psk-mixed"})
 	wps:depends({mode="ap", encryption="sae"})
 	wps:depends({mode="ap", encryption="sae-mixed"})
-	pin:depends({wps="pin"})
+	pin:depends({wps_pushbutton="1"})
 end
 
 if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then

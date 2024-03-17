@@ -829,6 +829,9 @@ msgstr "DSL 状态"
 msgid "DSL line mode"
 msgstr "DSL 线路模式"
 
+msgid "DTIM Interval"
+msgstr "DTIM 间隔"
+
 msgid "DUID"
 msgstr "DUID"
 
@@ -921,6 +924,15 @@ msgstr "禁用"
 
 msgid "Disabled (default)"
 msgstr "禁用（默认）"
+
+msgid "Short Preamble"
+msgstr "短前导码"
+
+msgid "MAC address"
+msgstr "MAC 地址"
+
+msgid "Override default MAC address - the range of usable addresses might be limited by the driver"
+msgstr "覆盖默认 MAC 地址 - 可用地址的范围可能受限于驱动"
 
 msgid "Disassociate On Low Acknowledgement"
 msgstr "弱信号剔除"
@@ -1777,6 +1789,14 @@ msgstr "留空则自动探测"
 msgid "Leave empty to use the current WAN address"
 msgstr "留空则使用当前 WAN 地址"
 
+msgid ""
+"Legacy or badly behaving devices may require legacy 802.11b rates to "
+"interoperate. Airtime efficiency may be significantly reduced where these "
+"are used. It is recommended to not allow 802.11b rates where possible."
+msgstr ""
+"过时或性能欠佳的设备可能需要旧的 802.11b 速率才能互联。在使用这些速率的情况"
+"下，信道占用效率可能会显著降低。建议尽可能不使用 802.11b 速率。"
+
 msgid "Legend:"
 msgstr "图例："
 
@@ -1998,6 +2018,21 @@ msgstr "内存使用率（%）"
 
 msgid "Mesh Id"
 msgstr "Mesh ID"
+
+msgid "Mesh Mode"
+msgstr "Mesh 模式"
+
+msgid "WDS Mode"
+msgstr "WDS 模式"
+
+msgid "Bridge Mode"
+msgstr "桥接模式（WDS）"
+
+msgid "Repeater Mode"
+msgstr "中继器模式（WDS）"
+
+msgid "Lazy Mode"
+msgstr "懒惰模式（WDS）"
 
 msgid "Metric"
 msgstr "跃点数"
@@ -4136,8 +4171,8 @@ msgstr "本地时区采用 IEEE Std 1003.1-2004 的 8.3 格式（例如 UTC8）"
 msgid "Enable 256-QAM"
 msgstr "启用 256-QAM"
 
-msgid "802.11n 2.4Ghz Only"
-msgstr "只适合 802.11n 2.4Ghz"
+msgid "802.11n 2.4Ghz only, may not supported by some hardware!"
+msgstr "只适合 802.11n 2.4Ghz, 某些无线硬件可能不支持!"
 
 msgid "tagged"
 msgstr "已标记"
@@ -4155,7 +4190,7 @@ msgid "Target Platform"
 msgstr "目标平台"
 
 msgid "Beacon Interval"
-msgstr "Beacon间隔"
+msgstr "Beacon 间隔"
 
 msgid "Kick STA Threshold"
 msgstr "弱信号剔除阈值"
