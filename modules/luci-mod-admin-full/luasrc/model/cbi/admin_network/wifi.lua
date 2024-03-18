@@ -361,6 +361,24 @@ end
 
 --------------------- MT7615/MT7915 Device ---------------------
 if hwtype == "mt_dbdc" then
+	if #tx_power_list > 0 then
+		tp = s:taboption("general", ListValue,
+			"txpower", translate("Transmit Power"), "dBm")
+		tp.rmempty = true
+		tp.default = tx_power_cur
+		function tp.cfgvalue(...)
+			return txpower_current(Value.cfgvalue(...), tx_power_list)
+		end
+
+		tp:value("", translate("auto"))
+		for _, p in ipairs(tx_power_list) do
+		  if p.display_dbm < 50 then
+			tp:value(p.driver_dbm, "%i dBm (%i mW)"
+				%{ p.display_dbm, p.display_mw })
+		  end
+		end
+	end
+
 	local cl = iw and iw.countrylist
 	if cl and #cl > 0 then
 		cc = s:taboption("advanced", ListValue, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
@@ -371,15 +389,6 @@ if hwtype == "mt_dbdc" then
 	else
 		s:taboption("advanced", Value, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
 	end
-
-	txpower = s:taboption("general", ListValue, "txpower", translate("Transmit Power"), "dBm")
-	txpower:value("100", translate("91~100%"))
-	txpower:value("75", translate("61~90%"))
-	txpower:value("50", translate("31~60%"))
-	txpower:value("25", translate("16~30%"))
-	txpower:value("12", translate("10~15%"))
-	txpower:value("4", translate("1~9%"))
-	txpower.default = "100"
 
 	legacyrates = s:taboption("general", Flag, "legacy_rates", translate("Allow legacy 802.11b rates"),
 		translate("Legacy or badly behaving devices may require legacy 802.11b rates to interoperate. " ..
@@ -724,6 +733,8 @@ if hwtype == "mt_dbdc" then
 
 	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"), translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
 	macaddr.optional = true
+	macaddr:depends({mode="ap"})
+	macaddr:depends({mode="wds"})
 
 	disassoc_low_ack = s:taboption("advanced", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
 	disassoc_low_ack.default = disassoc_low_ack.disabled
