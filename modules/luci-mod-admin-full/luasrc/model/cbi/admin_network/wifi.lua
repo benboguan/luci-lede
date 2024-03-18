@@ -410,19 +410,31 @@ if hwtype == "mt_dbdc" then
 	txburst = s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
 	txburst.default = txburst.enabled
 
-	s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"))
-	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
-	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
+	maxassoc = s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"), translate("The default number of single frequency connections for drivers is 64"))
+	maxassoc.datatype = "range(1,64)"
+	maxassoc.placeholder = 64
+	maxassoc.rmempty = true
+
+	frag = s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
+	frag.datatype = "min(256)"
+	frag.placeholder = 2346
+	frag.rmempty = true
+
+	rts = s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
+	rts.datatype = "uinteger"
+	rts.placeholder = 2347
+	rts.rmempty = true
 	
-	beacon_int = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
-	beacon_int.datatype = 'range(15,65535)';
-	beacon_int.placeholder = 100;
-	beacon_int.rmempty = true;
+	beacon_int = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'))
+	beacon_int.datatype = "range(20,999)"
+	beacon_int.placeholder = 100
+	beacon_int.rmempty = true
 
 	dtim_period = s:taboption("advanced", Value, "dtim_period", translate("DTIM Interval"),
 		translate("Delivery Traffic Indication Message Interval"))
+	dtim_period.datatype = "range(1,255)"
 	dtim_period.optional = true
-	dtim_period.placeholder = 2
+	dtim_period.placeholder = 1
 end
 
 ----------------------- Interface -----------------------
@@ -563,7 +575,7 @@ if hwtype == "mac80211" then
 	hidden:depends({mode="ap"})
 	hidden:depends({mode="ap-wds"})
 
-	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"))
+	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"), translate("Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates."))
 	wmm:depends({mode="ap"})
 	wmm:depends({mode="ap-wds"})
 	wmm.default = wmm.enabled
