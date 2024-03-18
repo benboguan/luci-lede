@@ -3747,6 +3747,12 @@ msgstr "WEP 密钥"
 msgid "WMM Mode"
 msgstr "WMM 模式"
 
+msgid "Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates."
+msgstr "如果禁用 Wi-Fi 多媒体 （WMM） 模式 QoS，则客户端的速率可能限制为 802.11a/802.11g。"
+
+msgid "The default number of single frequency connections for drivers is 64"
+msgstr "驱动默认单频连接数为64个"
+
 msgid "WPA passphrase"
 msgstr "WPA 密钥"
 
