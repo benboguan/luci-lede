@@ -265,11 +265,11 @@ if hwtype == "mac80211" then
 
 	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
 	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
-	
-	o = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'));
-	o.datatype = 'range(15,65535)';
-	o.placeholder = 100;
-	o.rmempty = true;
+
+	beacon_int = s:taboption("advanced", Value, "beacon_int", translate("Beacon Interval"))
+	beacon_int.optional = true
+	beacon_int.placeholder = 100
+	beacon_int.datatype = "range(15, 65535)"
 end
 
 
@@ -360,21 +360,25 @@ end
 
 
 --------------------- MT7615/MT7915 Device ---------------------
-if hwtype == "mt_dbdc" then
-	if #tx_power_list > 0 then
-		tp = s:taboption("general", ListValue,
-			"txpower", translate("Transmit Power"), "mW")
-		tp.rmempty = true
-		tp.default = tx_power_cur
-		function tp.cfgvalue(...)
-			return txpower_current(Value.cfgvalue(...), tx_power_list)
-		end
 
-		tp:value("", translate("auto"))
-		for _, p in ipairs(tx_power_list) do
-			tp:value(p.driver_mw, "%i mW (%i dBm)"
-				%{ p.display_mw, p.display_dbm })
-		end
+if hwtype == "mt_dbdc" then
+	tp = s:taboption("general",
+		(#tx_power_list > 0) and ListValue or Value,
+		"txpower", translate("Transmit Power"), "mW")
+
+	tp.rmempty = true
+	tp.default = tx_power_cur
+
+	function tp.cfgvalue(...)
+		return txpower_current(Value.cfgvalue(...), tx_power_list)
+	end
+
+	tp:value("", translate("auto"))
+	for _, p in ipairs(tx_power_list) do
+	  if p.display_dbm < 50 then
+		tp:value(p.driver_mw, "%i mW (%i dBm)"
+			%{ p.display_mw, p.display_dbm })
+	  end
 	end
 
 	local cl = iw and iw.countrylist
@@ -410,7 +414,8 @@ if hwtype == "mt_dbdc" then
 	txburst = s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
 	txburst.default = txburst.enabled
 
-	maxassoc = s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"), translate("The default number of single frequency connections for drivers is 64"))
+	maxassoc = s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"),
+		translate("The default number of single frequency connections for drivers is 64"))
 	maxassoc.datatype = "range(1,64)"
 	maxassoc.placeholder = 64
 	maxassoc.rmempty = true
@@ -426,13 +431,13 @@ if hwtype == "mt_dbdc" then
 	rts.rmempty = true
 	
 	beacon_int = s:taboption("advanced", Value, "beacon_int", translate('Beacon Interval'))
-	beacon_int.datatype = "range(20,999)"
+	beacon_int.datatype = "range(20, 999)"
 	beacon_int.placeholder = 100
-	beacon_int.rmempty = true
+	beacon_int.optional = true
 
 	dtim_period = s:taboption("advanced", Value, "dtim_period", translate("DTIM Interval"),
 		translate("Delivery Traffic Indication Message Interval"))
-	dtim_period.datatype = "range(1,255)"
+	dtim_period.datatype = "range(1, 255)"
 	dtim_period.optional = true
 	dtim_period.placeholder = 1
 end
@@ -575,20 +580,21 @@ if hwtype == "mac80211" then
 	hidden:depends({mode="ap"})
 	hidden:depends({mode="ap-wds"})
 
-	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"), translate("Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates."))
+	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"),
+		translate("Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates."))
 	wmm:depends({mode="ap"})
 	wmm:depends({mode="ap-wds"})
 	wmm.default = wmm.enabled
 
 	isolate = s:taboption("advanced", Flag, "isolate", translate("Isolate Clients"),
-	 translate("Prevents client-to-client communication"))
+		translate("Prevents client-to-client communication"))
 	isolate:depends({mode="ap"})
 	isolate:depends({mode="ap-wds"})
 
 	ifname = s:taboption("advanced", Value, "ifname", translate("Interface name"), translate("Override default interface name"))
 	ifname.optional = true
 
-	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
+	disassoc_low_ack = s:taboption("general", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"), translate("Allow AP mode to disconnect STAs based on low ACK condition"))
 	disassoc_low_ack.default = disassoc_low_ack.enabled
 end
 
@@ -715,7 +721,8 @@ if hwtype == "mt_dbdc" then
 
 	s:taboption("general", DummyValue,"note_wds" ,translate("Note"), translate("WDS mode is only available between Ralink/MTK devices.")):depends({mode="wds"})
 
-	phymode = s:taboption("advanced", ListValue, "wdsphymode", translate("WDS PHY Mode"), translate("If GREENFIELD seems to be unstable,try to use OFDM instead.VHT is only available for 11AC devices."))
+	phymode = s:taboption("advanced", ListValue, "wdsphymode", translate("WDS PHY Mode"),
+		translate("If GREENFIELD seems to be unstable,try to use OFDM instead.VHT is only available for 11AC devices."))
 	phymode:depends({mode="wds"})
 	phymode:value("CCK")
 	phymode:value("OFDM")
@@ -728,44 +735,47 @@ if hwtype == "mt_dbdc" then
 	hidden:depends({mode="ap"})
 	hidden:depends({mode="ap-wds"})
 
-	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"))
+	wmm = s:taboption("general", Flag, "wmm", translate("WMM Mode"),
+		translate("Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates."))
 	wmm:depends({mode="ap"})
 	wmm:depends({mode="ap-wds"})
 	wmm.default = wmm.enabled
 
 	isolate = s:taboption("advanced", Flag, "isolate", translate("Isolate Clients"),
-	 translate("Prevents client-to-client communication"))
+		translate("Prevents client-to-client communication"))
 	isolate:depends({mode="ap"})
 	isolate:depends({mode="ap-wds"})
 
 	short_preamble = s:taboption("advanced", Flag, "short_preamble", translate("Short Preamble"))
 	short_preamble.default = short_preamble.enabled
 
-	rekey= s:taboption("advanced", Value, "wpa_group_rekey", translate("Time interval for rekeying GTK"), translate("sec"));
+	rekey= s:taboption("advanced", Value, "wpa_group_rekey", translate("Time interval for rekeying GTK"), translate("sec"))
 	rekey.optional    = true
 	rekey.placeholder = 3600
 	rekey.datatype = "uinteger"
 	rekey:depends({mode="ap"})
 
-	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"), translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
+	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"),
+		translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
 	macaddr.optional = true
 	macaddr:depends({mode="ap"})
 	macaddr:depends({mode="wds"})
 
-	disassoc_low_ack = s:taboption("advanced", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),translate("Allow AP mode to disconnect STAs based on low ACK condition"))
+	disassoc_low_ack = s:taboption("advanced", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),
+		translate("Allow AP mode to disconnect STAs based on low ACK condition"))
 	disassoc_low_ack.default = disassoc_low_ack.disabled
 	disassoc_low_ack:depends({mode="ap"})
 
-	kicklow= s:taboption("advanced", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
+	kicklow= s:taboption("advanced", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"))
 	kicklow.optional    = true
 	kicklow.placeholder = -75
-	kicklow.datatype = "range(-100,0)"
+	kicklow.datatype = "range(-100, 0)"
 	kicklow:depends("disassoc_low_ack", "1")
 
-	assocthres= s:taboption("advanced", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
+	assocthres= s:taboption("advanced", Value, "assocthres", translate("Station associate threshold"), translate("dBm"))
 	assocthres.optional    = true
 	assocthres.placeholder = -65
-	assocthres.datatype    = "range(-100,0)"
+	assocthres.datatype    = "range(-100, 0)"
 	assocthres:depends("disassoc_low_ack", "1")
 end
 
@@ -809,7 +819,7 @@ end
 function encr.write(self, section, value)
 	local e = tostring(encr:formvalue(section))
 	local c = tostring(cipher:formvalue(section))
-	if value == "wpa" or value == "wpa2"  then
+	if value == "wpa" or value == "wpa2" or value == "wpa3" or value == "wpa3-mixed" then
 		self.map.uci:delete("wireless", section, "key")
 	end
 	if e and (c == "tkip" or c == "ccmp" or c == "tkip+ccmp") then
@@ -1178,14 +1188,6 @@ if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
 	r1_key_holder.datatype = "and(hexstring,rangelength(12,12))"
 	r1_key_holder.rmempty = true
 
-	reassociation_deadline = s:taboption("encryption", Value, "reassociation_deadline",
-		translate("Reassociation Deadline"),
-		translate("time units (TUs / 1.024 ms) [1000-65535]"))
-	reassociation_deadline:depends({ieee80211r="1", ft_psk_generate_local=""})
-	reassociation_deadline.placeholder = "1000"
-	reassociation_deadline.datatype = "range(1000,65535)"
-	reassociation_deadline.rmempty = true
-
 	pmk_r1_push = s:taboption("encryption", Flag, "pmk_r1_push", translate("PMK R1 Push"))
 	pmk_r1_push:depends({ieee80211r="1", ft_psk_generate_local=""})
 	pmk_r1_push.placeholder = "0"
@@ -1372,6 +1374,7 @@ if hwtype == "mt_dbdc" then
 		ieee80211w:depends({mode="ap", encryption="sae-mixed"})
 		ieee80211w:depends({mode="ap-wds", encryption="sae"})
 		ieee80211w:depends({mode="ap-wds", encryption="sae-mixed"})
+	end
 end
 
 if hwtype == "mac80211" then
