@@ -1049,8 +1049,14 @@ msgstr "紧急"
 msgid "Enable"
 msgstr "启用"
 
+msgid "Enable 256QAM modulation"
+msgstr "启用 256QAM 调制"
+
 msgid "Enable for MTK Repeater mode"
 msgstr "MTK 无线中继时启用"
+
+msgid "Delivery Traffic Indication Message Interval"
+msgstr "发送流量指示信标间隔"
 
 msgid ""
 "Enable <abbr title=\"Internet Group Management Protocol\">IGMP</abbr> "
