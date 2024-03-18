@@ -928,6 +928,12 @@ msgstr "禁用（默认）"
 msgid "Short Preamble"
 msgstr "短前导码"
 
+msgid "sec"
+msgstr "秒"
+
+msgid "Time interval for rekeying GTK"
+msgstr "重新加密 GTK 的时间间隔"
+
 msgid "MAC address"
 msgstr "MAC 地址"
 
@@ -1090,6 +1096,9 @@ msgstr "启用 TFTP 服务器"
 
 msgid "Enable VLAN functionality"
 msgstr "启用 VLAN"
+
+msgid "Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE"
+msgstr "启用 WPS 一键加密按钮，需要 WPA(2)-PSK/WPA3-SAE"
 
 msgid "Enable WPS pushbutton, requires WPA(2)-PSK"
 msgstr "启用 WPS 一键加密按钮，需要 WPA(2)-PSK"

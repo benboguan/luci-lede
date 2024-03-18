@@ -363,7 +363,7 @@ end
 if hwtype == "mt_dbdc" then
 	if #tx_power_list > 0 then
 		tp = s:taboption("general", ListValue,
-			"txpower", translate("Transmit Power"), "dBm")
+			"txpower", translate("Transmit Power"), "mW")
 		tp.rmempty = true
 		tp.default = tx_power_cur
 		function tp.cfgvalue(...)
@@ -372,10 +372,8 @@ if hwtype == "mt_dbdc" then
 
 		tp:value("", translate("auto"))
 		for _, p in ipairs(tx_power_list) do
-		  if p.display_dbm < 50 then
-			tp:value(p.driver_dbm, "%i dBm (%i mW)"
-				%{ p.display_dbm, p.display_mw })
-		  end
+			tp:value(p.driver_mw, "%i mW (%i dBm)"
+				%{ p.display_mw, p.display_dbm })
 		end
 	end
 
@@ -731,6 +729,12 @@ if hwtype == "mt_dbdc" then
 	short_preamble = s:taboption("advanced", Flag, "short_preamble", translate("Short Preamble"))
 	short_preamble.default = short_preamble.enabled
 
+	rekey= s:taboption("advanced", Value, "wpa_group_rekey", translate("Time interval for rekeying GTK"), translate("sec"));
+	rekey.optional    = true
+	rekey.placeholder = 3600
+	rekey.datatype = "uinteger"
+	rekey:depends({mode="ap"})
+
 	macaddr = s:taboption("advanced", Value, "macaddr", translate("MAC address"), translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
 	macaddr.optional = true
 	macaddr:depends({mode="ap"})
@@ -740,17 +744,17 @@ if hwtype == "mt_dbdc" then
 	disassoc_low_ack.default = disassoc_low_ack.disabled
 	disassoc_low_ack:depends({mode="ap"})
 
-	rssikick= s:taboption("advanced", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
-	rssikick.optional    = true
-	rssikick.placeholder = -75
-	rssikick.datatype = "range(-100,0)"
-	rssikick:depends("disassoc_low_ack", "1")
+	kicklow= s:taboption("advanced", Value, "kicklow", translate("Kick low RSSI station threshold"), translate("dBm"));
+	kicklow.optional    = true
+	kicklow.placeholder = -75
+	kicklow.datatype = "range(-100,0)"
+	kicklow:depends("disassoc_low_ack", "1")
 
-	rssiassoc= s:taboption("advanced", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
-	rssiassoc.optional    = true
-	rssiassoc.placeholder = -65
-	rssiassoc.datatype    = "range(-100,0)"
-	rssiassoc:depends("disassoc_low_ack", "1")
+	assocthres= s:taboption("advanced", Value, "assocthres", translate("Station associate threshold"), translate("dBm"));
+	assocthres.optional    = true
+	assocthres.placeholder = -65
+	assocthres.datatype    = "range(-100,0)"
+	assocthres:depends("disassoc_low_ack", "1")
 end
 
 ------------------- WiFI-Encryption -------------------
@@ -1006,20 +1010,6 @@ for slot=1,4 do
 		end
 		return Value.write(self, section, value)
 	end
-end
-
-if hwtype == "mt_dbdc" then
-	wps = s:taboption("encryption", ListValue, "wps_pushbutton", translate("WPS Mode"))
-	wps:value("", translate("disable"))
-	wps:value("1", translate("PIN"))
-	wps:value("2", translate("PBC"))
-	pin = s:taboption("encryption", Value, "pin", translate("WPS PIN"))
-	wps:depends({mode="ap", encryption="psk"})
-	wps:depends({mode="ap", encryption="psk2"})
-	wps:depends({mode="ap", encryption="psk-mixed"})
-	wps:depends({mode="ap", encryption="sae"})
-	wps:depends({mode="ap", encryption="sae-mixed"})
-	pin:depends({wps_pushbutton="1"})
 end
 
 if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
@@ -1347,7 +1337,32 @@ if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
 end
 
 -- ieee802.11w options
-if hwtype == "mac80211" or hwtype == "mt_dbdc" then
+if hwtype == "mt_dbdc" then
+	local has_80211w = (os.execute("hostapd -v11w 2>/dev/null || hostapd -veap 2>/dev/null") == 0)
+	if has_80211w then
+		ieee80211w = s:taboption("encryption", ListValue, "ieee80211w",
+			translate("802.11w Management Frame Protection"),
+			translate("Requires the 'full' version of wpad/hostapd " ..
+				"and support from the wifi driver <br />(as of Feb 2017: " ..
+				"ath9k and ath10k, in LEDE also mwlwifi and mt76)"))
+		ieee80211w.default = ""
+		ieee80211w.rmempty = true
+		ieee80211w:value("", translate("Disabled (default)"))
+		ieee80211w:value("1", translate("Optional"))
+		ieee80211w:value("2", translate("Required"))
+		ieee80211w:depends({mode="ap", encryption="wpa2"})
+		ieee80211w:depends({mode="ap-wds", encryption="wpa2"})
+		ieee80211w:depends({mode="ap", encryption="psk2"})
+		ieee80211w:depends({mode="ap", encryption="psk-mixed"})
+		ieee80211w:depends({mode="ap-wds", encryption="psk2"})
+		ieee80211w:depends({mode="ap-wds", encryption="psk-mixed"})
+		ieee80211w:depends({mode="ap", encryption="sae"})
+		ieee80211w:depends({mode="ap", encryption="sae-mixed"})
+		ieee80211w:depends({mode="ap-wds", encryption="sae"})
+		ieee80211w:depends({mode="ap-wds", encryption="sae-mixed"})
+end
+
+if hwtype == "mac80211" then
 	local has_80211w = (os.execute("hostapd -v11w 2>/dev/null || hostapd -veap 2>/dev/null") == 0)
 	if has_80211w then
 		ieee80211w = s:taboption("encryption", ListValue, "ieee80211w",
@@ -1404,6 +1419,20 @@ if hwtype == "mac80211" or hwtype == "mt_dbdc" then
 	key_retries:depends({mode="ap", encryption="sae-mixed"})
 	key_retries:depends({mode="ap-wds", encryption="sae"})
 	key_retries:depends({mode="ap-wds", encryption="sae-mixed"})
+end
+
+if hwtype == "mt_dbdc" then
+	wps = s:taboption("encryption", ListValue, "wps_pushbutton", translate("Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE"))
+	wps:value("", translate("disable"))
+	wps:value("1", translate("PIN"))
+	wps:value("2", translate("PBC"))
+	pin = s:taboption("encryption", Value, "pin", translate("WPS PIN"))
+	wps:depends({mode="ap", encryption="psk"})
+	wps:depends({mode="ap", encryption="psk2"})
+	wps:depends({mode="ap", encryption="psk-mixed"})
+	wps:depends({mode="ap", encryption="sae"})
+	wps:depends({mode="ap", encryption="sae-mixed"})
+	pin:depends({wps_pushbutton="1"})
 end
 
 if hwtype == "mac80211" or hwtype == "prism2" then
