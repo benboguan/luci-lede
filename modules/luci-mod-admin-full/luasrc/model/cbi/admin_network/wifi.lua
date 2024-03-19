@@ -374,25 +374,6 @@ end
 --------------------- MT7615/MT7915 Device ---------------------
 
 if hwtype == "mt_dbdc" then
-	tp = s:taboption("general",
-		(#tx_power_list > 0) and ListValue or Value,
-		"txpower", translate("Transmit Power"), "mW")
-
-	tp.rmempty = true
-	tp.default = tx_power_cur
-
-	function tp.cfgvalue(...)
-		return txpower_current(Value.cfgvalue(...), tx_power_list)
-	end
-
-	tp:value("", translate("auto"))
-	for _, p in ipairs(tx_power_list) do
-	  if p.display_dbm < 50 then
-		tp:value(p.driver_mw, "%i mW (%i dBm)"
-			%{ p.display_mw, p.display_dbm })
-	  end
-	end
-
 	local cl = iw and iw.countrylist
 	if cl and #cl > 0 then
 		cc = s:taboption("advanced", ListValue, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
@@ -403,6 +384,15 @@ if hwtype == "mt_dbdc" then
 	else
 		s:taboption("advanced", Value, "country", translate("Country Code"), translate("Use ISO/IEC 3166 alpha2 country codes."))
 	end
+
+	txpower = s:taboption("general", ListValue, "txpower", translate("Transmit Power"), "%")
+	txpower:value("100", translate("91~100%"))
+	txpower:value("75", translate("61~90%"))
+	txpower:value("50", translate("31~60%"))
+	txpower:value("25", translate("16~30%"))
+	txpower:value("12", translate("10~15%"))
+	txpower:value("5", translate("1~9%"))
+	txpower.default = "100"
 
 	legacyrates = s:taboption("general", Flag, "legacy_rates", translate("Allow legacy 802.11b rates"),
 		translate("Legacy or badly behaving devices may require legacy 802.11b rates to interoperate. " ..
