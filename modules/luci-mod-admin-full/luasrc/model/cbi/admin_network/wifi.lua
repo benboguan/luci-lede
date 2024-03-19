@@ -7,6 +7,17 @@ local ut = require "luci.util"
 local nt = require "luci.sys".net
 local fs = require "nixio.fs"
 
+local acct_port, acct_secret, acct_server, anonymous_identity, ant1, ant2,
+	auth, auth_port, auth_secret, auth_server, bssid, cacert, cacert2,
+	cc, ch, cipher, clientcert, clientcert2, ea, eaptype, en, encr,
+	ft_protocol, ft_psk_generate_local, hidden, htmode, identity,
+	ieee80211r, ieee80211w, ifname, isolate, key_retries,
+	legacyrates, max_timeout, meshfwd, meshid, ml, mobility_domain, mode,
+	mp, nasid, network, password, pmk_r1_push, privkey, privkey2, privkeypwd,
+	privkeypwd2, r0_key_lifetime, r0kh, r1_key_holder, r1kh,
+	reassociation_deadline, retry_timeout, ssid, st, tp, wepkey, wepslot,
+	wmm, wpakey, wps, disassoc_low_ack, short_preamble, beacon_int, dtim_period
+
 arg[1] = arg[1] or ""
 
 m = Map("wireless", "",
@@ -62,7 +73,7 @@ function m.parse(map)
 
 	Map.parse(map)
 
-	if m:get(wdev:name(), "type") == "mac80211" and new_cc and new_cc ~= old_cc then
+	if m:get(wdev:name(), "type") == "mac80211" or m:get(wdev:name(), "type") == "mt_dbdc" and new_cc and new_cc ~= old_cc then
 		luci.sys.call("iw reg set %s" % ut.shellquote(new_cc))
 		luci.http.redirect(luci.dispatcher.build_url("admin/network/wireless", arg[1]))
 		return
@@ -173,6 +184,7 @@ else
 	ch.hwmodes = hw_modes
 	ch.htmodes = iw.htmodelist
 	ch.freqlist = iw.freqlist
+	ch.iwinfo = iw
 	ch.template = "cbi/wireless_modefreq"
 
 	function ch.cfgvalue(self, section)
