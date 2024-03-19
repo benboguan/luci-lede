@@ -509,11 +509,12 @@ static int run_daemon(void)
 				iw_checkif("wl%d");
 				iw_checkif("host%d");
 				iw_checkif("rausb%d");
-				iw_checkif("rax0%d");
-				iw_checkif("ra0%d");
+				iw_checkif("rax%d");
+				iw_checkif("rai%d");
+				iw_checkif("ra%d");
 				iw_checkif("apcliusb%d");
-				iw_checkif("apclix0%d");
-				iw_checkif("apcli0%d");
+				iw_checkif("apclix%d");
+				iw_checkif("apcli%d");
 			}
 		}
 

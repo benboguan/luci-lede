@@ -934,6 +934,7 @@ elseif hwtype == "mt_dbdc" then
 	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="adhoc"})
 	encr:value("sae", "WPA3-SAE", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="wds"}, {mode="adhoc"}, {mode="mesh"})
 	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="adhoc"}, {mode="mesh"})
+	encr:value("owe", "OWE", {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="adhoc"})
 end
 
 auth_server = s:taboption("encryption", Value, "auth_server", translate("Radius-Authentication-Server"))
@@ -1377,15 +1378,15 @@ if hwtype == "mt_dbdc" then
 		ieee80211w:value("1", translate("Optional"))
 		ieee80211w:value("2", translate("Required"))
 		ieee80211w:depends({mode="ap", encryption="wpa2"})
-		ieee80211w:depends({mode="ap-wds", encryption="wpa2"})
+		ieee80211w:depends({mode="sta", encryption="wpa2"})
 		ieee80211w:depends({mode="ap", encryption="psk2"})
 		ieee80211w:depends({mode="ap", encryption="psk-mixed"})
-		ieee80211w:depends({mode="ap-wds", encryption="psk2"})
-		ieee80211w:depends({mode="ap-wds", encryption="psk-mixed"})
+		ieee80211w:depends({mode="sta", encryption="psk2"})
+		ieee80211w:depends({mode="sta", encryption="psk-mixed"})
 		ieee80211w:depends({mode="ap", encryption="sae"})
 		ieee80211w:depends({mode="ap", encryption="sae-mixed"})
-		ieee80211w:depends({mode="ap-wds", encryption="sae"})
-		ieee80211w:depends({mode="ap-wds", encryption="sae-mixed"})
+		ieee80211w:depends({mode="sta", encryption="sae"})
+		ieee80211w:depends({mode="sta", encryption="sae-mixed"})
 	end
 end
 
@@ -1459,6 +1460,11 @@ if hwtype == "mt_dbdc" then
 	wps:depends({mode="ap", encryption="psk-mixed"})
 	wps:depends({mode="ap", encryption="sae"})
 	wps:depends({mode="ap", encryption="sae-mixed"})
+	wps:depends({mode="sta", encryption="psk"})
+	wps:depends({mode="sta", encryption="psk2"})
+	wps:depends({mode="sta", encryption="psk-mixed"})
+	wps:depends({mode="sta", encryption="sae"})
+	wps:depends({mode="sta", encryption="sae-mixed"})
 	pin:depends({wps_pushbutton="1"})
 end
 

@@ -73,6 +73,12 @@ then
 	--m.hidden.wpa_suite = (tonumber(http.formvalue("wpa_version")) or 0) >= 2 and "sae" or "wpa3" or "owe" or "psk2" or "psk"
 end
 
+lock_bssid = m:field(Flag, "lock_bssid", translate("Lock to BSSID"),
+	translate("Instead of joining any network with a matching SSID, only connect to the BSSID <code>%h</code>.").format(m.hidden.bssid))
+
+lock_bssid.default = "0"
+lock_bssid.datatype = "bssid"
+
 newnet = m:field(Value, "_netname_new", translate("Name of the new network"),
 	translate("The allowed characters are: <code>A-Z</code>, <code>a-z</code>, " ..
 		"<code>0-9</code> and <code>_</code>"

@@ -3759,6 +3759,12 @@ msgstr "WPA 密钥"
 msgid "WPS Mode"
 msgstr "WPS 模式"
 
+msgid "Lock to BSSID"
+msgstr "锁定到 BSSID"
+
+msgid "Instead of joining any network with a matching SSID, only connect to the BSSID <code>%h</code>."
+msgstr "仅连接到 BSSID 为 <code>%h</code> 的网络，而不是其它 SSID 相同的网络。"
+
 msgid ""
 "WPA-Encryption requires wpa_supplicant (for client mode) or hostapd (for AP "
 "and ad-hoc mode) to be installed."

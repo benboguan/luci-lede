@@ -1256,6 +1256,7 @@ function interface.ports(self)
 		for _, iface in ipairs(members) do
 			ifaces[#ifaces+1] = interface(iface)
 		end
+		return ifaces
 	end
 end
 
@@ -1538,7 +1539,7 @@ end
 
 function wifinet.ifname(self)
 	local ifname = self:ubus("net", "ifname") or self.iwinfo.ifname
-	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra0") or ifname:match("^rax0")  then
+	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra%d") or ifname:match("^rax%d")  then
 		ifname = self.wdev
 	end
 	return ifname

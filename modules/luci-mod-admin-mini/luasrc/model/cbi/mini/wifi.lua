@@ -258,6 +258,7 @@ elseif hwtype == "mt_dbdc" then
 	encr:value("psk-mixed", "WPA-PSK/WPA2-PSK Mixed Mode")
 	encr:value("sae", "WPA3-SAE")
 	encr:value("sae-mixed", "WPA2-PSK/WPA3-SAE Mixed Mode")
+	encr:value("owe", "OWE")
 end
 
 key = s:option(Value, "key", translate("Key"))
