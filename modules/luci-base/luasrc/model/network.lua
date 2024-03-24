@@ -8,6 +8,7 @@ local tonumber, tostring, math = tonumber, tostring, math
 
 local require = require
 
+local bus = require "ubus"
 local nxo = require "nixio"
 local nfs = require "nixio.fs"
 local ipc = require "luci.ip"
@@ -23,7 +24,7 @@ module "luci.model.network"
 
 IFACE_PATTERNS_VIRTUAL  = { }
 IFACE_PATTERNS_IGNORE   = { "^wmaster%d", "^wifi%d", "^hwsim%d", "^imq%d", "^ifb%d", "^mon%.wlan%d", "^sit%d", "^gre%d", "^gretap%d", "^ip6gre%d", "^ip6tnl%d", "^tunl%d", "^lo$" }
-IFACE_PATTERNS_WIRELESS = { "^wlan%d", "^wl%d", "^ath%d", "^rausb%d", "^rai%d", "^rax0%d", "^ra0%d", "^wdsi%d", "^wdsx%d", "^wds%d", "^apclii%d", "^apclix0%d", "^apcli0%d", "^apcliusb%d", "^%w+%.network%d" }
+IFACE_PATTERNS_WIRELESS = { "^wlan%d", "^wl%d", "^ath%d", "^rausb%d", "^rai%d", "^rax%d", "^ra%d", "^wdsi%d", "^wdsx%d", "^wds%d", "^apclii%d", "^apclix%d", "^apcli%d", "^apcliusb%d", "^%w+%.network%d" }
 
 
 protocol = utl.class()
@@ -31,7 +32,7 @@ protocol = utl.class()
 local _protocols = { }
 
 local _interfaces, _bridge, _switch, _tunnel, _swtopo
-local _ubusnetcache, _ubusdevcache, _ubuswificache
+local _ubus, _ubusnetcache, _ubusdevcache, _ubuswificache
 local _uci
 
 function _filter(c, s, o, r)
@@ -115,7 +116,7 @@ function _wifi_iface(x)
 			return true
 		end
 	end
-	return false
+	return (nfs.access("/sys/class/net/%s/phy80211" % x) == true)
 end
 
 function _wifi_state(key, val, field)
@@ -1539,7 +1540,7 @@ end
 
 function wifinet.ifname(self)
 	local ifname = self:ubus("net", "ifname") or self.iwinfo.ifname
-	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra%d") or ifname:match("^rax%d")  then
+	if not ifname or ifname:match("^wifi%d") or ifname:match("^radio%d") or ifname:match("^ra%d") or ifname:match("^rax%d") or ifname:match("^rai")  then
 		ifname = self.wdev
 	end
 	return ifname
@@ -1617,7 +1618,8 @@ function wifinet.noise(self)
 end
 
 function wifinet.country(self)
-	return self.iwinfo.country or self:ubus("dev", "config", "country") or "US"
+	local cntuci = sys.exec("uci get wireless.%s.country | cut -d'/' -f1" %self:get("device"))
+	return self.iwinfo.country or self:ubus("dev", "config", "country") or cntuci or "US"
 end
 
 function wifinet.txpower(self)
