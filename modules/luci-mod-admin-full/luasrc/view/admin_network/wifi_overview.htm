@@ -359,6 +359,7 @@
 							);
 
 							tr.insertCell(-1).innerHTML = nowrap(wifirate(assoclist[j], true)) + '<br />' + nowrap(wifirate(assoclist[j], false));
+							tr.insertCell(-1).innerHTML = nowrap(String.format('%t', assoclist[j].inactive));
 
 							rowstyle = (rowstyle == 1) ? 2 : 1;
 						}
@@ -466,7 +467,7 @@
 				<th class="cbi-section-table-cell"><%:Host%></th>
 				<th class="cbi-section-table-cell"><%:Signal%> / <%:Noise%></th>
 				<th class="cbi-section-table-cell"><%:RX Rate%> / <%:TX Rate%></th>
-				<th class="cbi-section-table-cell"><%:Uptime%></th>
+				<th class="cbi-section-table-cell"><%:Inactive%></th>
 			</tr>
 			<tr class="cbi-section-table-row cbi-rowstyle-2">
 				<td class="cbi-value-field" colspan="6">

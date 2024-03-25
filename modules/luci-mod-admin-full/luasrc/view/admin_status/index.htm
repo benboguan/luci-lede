@@ -627,6 +627,7 @@
 					);
 
 					tr.insertCell(-1).innerHTML = wifirate(assoclist[i], true).nobr() + '<br />' + wifirate(assoclist[i], false).nobr();
+					tr.insertCell(-1).innerHTML = String.format('%t', assoclist[i].inactive).nobr();
 				}
 
 				if (ac.rows.length == 1)
@@ -841,6 +842,7 @@
 			<th class="cbi-section-table-cell"><%:Host%></th>
 			<th class="cbi-section-table-cell"><%:Signal%> / <%:Noise%></th>
 			<th class="cbi-section-table-cell"><%:RX Rate%> / <%:TX Rate%></th>
+			<th class="cbi-section-table-cell"><%:Inactive%></th>
 		</tr>
 		<tr class="cbi-section-table-row">
 			<td colspan="6"><em><br /><%:Collecting data...%></em></td>
