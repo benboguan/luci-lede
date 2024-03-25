@@ -116,7 +116,7 @@ function _wifi_iface(x)
 			return true
 		end
 	end
-	return (nfs.access("/sys/class/net/%s/phy80211" % x) == true)
+	return false
 end
 
 function _wifi_state(key, val, field)
@@ -254,6 +254,7 @@ function init(cursor)
 					b.ifnames[1].bridge = b
 				end
 				_bridge[r[1]] = b
+				_interfaces[r[1]].bridge = b
 			elseif b then
 				b.ifnames[#b.ifnames+1] = _interfaces[r[2]]
 				b.ifnames[#b.ifnames].bridge = b
