@@ -73,7 +73,7 @@ function m.parse(map)
 
 	Map.parse(map)
 
-	if m:get(wdev:name(), "type") == "mac80211" or m:get(wdev:name(), "type") == "mt_dbdc" and new_cc and new_cc ~= old_cc then
+	if m:get(wdev:name(), "type") == "mac80211" and new_cc and new_cc ~= old_cc then
 		luci.sys.call("iw reg set %s" % ut.shellquote(new_cc))
 		luci.http.redirect(luci.dispatcher.build_url("admin/network/wireless", arg[1]))
 		return
@@ -410,8 +410,8 @@ if hwtype == "mt_dbdc" then
 	doth = s:taboption("advanced", Flag, "doth", translate("802.11h"))
 	doth.default = doth.disabled
 
-	whnat = s:taboption("advanced", Flag, "whnat", translate("Wireless HWNAT"))
-	whnat.default = whnat.enabled
+-- 	whnat = s:taboption("advanced", Flag, "whnat", translate("Wireless HWNAT"))
+-- 	whnat.default = whnat.enabled
 
 	txburst = s:taboption("advanced", Flag, "txburst", translate("TX Burst"))
 	txburst.default = txburst.enabled
@@ -654,11 +654,11 @@ end
 ----------------------- MT7615/MT7915 Interface ---------------------
 
 if hwtype == "mt_dbdc" then
-	if fs.access("/usr/sbin/iw") then
-		mode:value("mesh", "802.11s")
-	end
+-- 	if fs.access("/usr/sbin/iw") then
+-- 		mode:value("mesh", "802.11s")
+-- 	end
 
-	mode:value("monitor", translate("Monitor"))
+-- 	mode:value("monitor", translate("Monitor"))
 	mode:value("wds", translate("WDS"))
 	bssid:depends({mode="adhoc"})
 	bssid:depends({mode="sta"})
@@ -704,14 +704,14 @@ if hwtype == "mt_dbdc" then
 		end
 	end
 
-	map = s:taboption("general", ListValue, "mapmode", translate("Mesh Mode"))
-	map:depends({mode="mesh"})
-	map:value("0", translate("Disable"))
-	map:value("1", translate("Map Turnkey"))
-	map:value("2", translate("BS 2.0"))
-	map:value("3", translate("API Mode"))
-	map:value("4", translate("Cert"))
-	map.default = "0"
+-- 	map = s:taboption("general", ListValue, "mapmode", translate("Mesh Mode"))
+-- 	map:depends({mode="mesh"})
+-- 	map:value("0", translate("Disable"))
+-- 	map:value("1", translate("Map Turnkey"))
+-- 	map:value("2", translate("BS 2.0"))
+-- 	map:value("3", translate("API Mode"))
+-- 	map:value("4", translate("Cert"))
+-- 	map.default = "0"
 
 	wdsen = s:taboption("general", ListValue, "wdsen", translate("WDS Mode"))
 	wdsen:depends({mode="wds"})
@@ -761,7 +761,7 @@ if hwtype == "mt_dbdc" then
 		translate("Override default MAC address - the range of usable addresses might be limited by the driver"))
 	macaddr.optional = true
 	macaddr:depends({mode="ap"})
-	macaddr:depends({mode="wds"})
+-- 	macaddr:depends({mode="wds"})
 
 	disassoc_low_ack = s:taboption("advanced", Flag, "disassoc_low_ack", translate("Disassociate On Low Acknowledgement"),
 		translate("Allow AP mode to disconnect STAs based on low ACK condition"))
@@ -1037,7 +1037,8 @@ for slot=1,4 do
 	end
 end
 
-if hwtype == "mac80211" or hwtype == "prism2" or hwtype == "mt_dbdc" then
+
+if hwtype == "mac80211" or hwtype == "prism2" then
 
 	-- Probe 802.11k support
 	ieee80211k = s:taboption("encryption", Flag, "ieee80211k", translate("802.11k"), translate("Enables The 802.11k standard provides information to discover the best available access point"))
@@ -1355,6 +1356,106 @@ end
 
 -- ieee802.11w options
 if hwtype == "mt_dbdc" then
+
+	-- Probe 802.11k support
+	ieee80211k = s:taboption("encryption", Flag, "ieee80211k", translate("802.11k"), translate("Enables The 802.11k standard provides information to discover the best available access point"))
+	ieee80211k:depends({mode="ap", encryption="wpa"})
+	ieee80211k:depends({mode="ap", encryption="wpa2"})
+	ieee80211k:depends({mode="ap-wds", encryption="wpa"})
+	ieee80211k:depends({mode="ap-wds", encryption="wpa2"})
+	ieee80211k:depends({mode="ap", encryption="psk"})
+	ieee80211k:depends({mode="ap", encryption="psk2"})
+	ieee80211k:depends({mode="ap", encryption="psk-mixed"})
+	ieee80211k:depends({mode="ap-wds", encryption="psk"})
+	ieee80211k:depends({mode="ap-wds", encryption="psk2"})
+	ieee80211k:depends({mode="ap-wds", encryption="psk-mixed"})
+	ieee80211k:depends({mode="ap", encryption="sae"})
+	ieee80211k:depends({mode="ap", encryption="sae-mixed"})
+	ieee80211k:depends({mode="ap-wds", encryption="sae"})
+	ieee80211k:depends({mode="ap-wds", encryption="sae-mixed"})
+	ieee80211k.rmempty = true
+	-- End of 802.11k options
+
+	-- Probe 802.11r support (and EAP support as a proxy for Openwrt)
+	local has_80211r = (os.execute("hostapd -v11r 2>/dev/null || hostapd -veap 2>/dev/null") == 0)
+
+	ieee80211r = s:taboption("encryption", Flag, "ieee80211r",
+		translate("802.11r Fast Transition"),
+		translate("Enables fast roaming among access points that belong " ..
+			"to the same Mobility Domain"))
+	ieee80211r:depends({mode="ap", encryption="wpa"})
+	ieee80211r:depends({mode="ap", encryption="wpa2"})
+	ieee80211r:depends({mode="ap-wds", encryption="wpa"})
+	ieee80211r:depends({mode="ap-wds", encryption="wpa2"})
+	ieee80211r:depends({mode="ap", encryption="sae"})
+	ieee80211r:depends({mode="ap", encryption="sae-mixed"})
+	ieee80211r:depends({mode="ap-wds", encryption="sae"})
+	ieee80211r:depends({mode="ap-wds", encryption="sae-mixed"})
+	if has_80211r then
+		ieee80211r:depends({mode="ap", encryption="psk"})
+		ieee80211r:depends({mode="ap", encryption="psk2"})
+		ieee80211r:depends({mode="ap", encryption="psk-mixed"})
+		ieee80211r:depends({mode="ap-wds", encryption="psk"})
+		ieee80211r:depends({mode="ap-wds", encryption="psk2"})
+		ieee80211r:depends({mode="ap-wds", encryption="psk-mixed"})
+		ieee80211r:depends({mode="ap", encryption="sae"})
+		ieee80211r:depends({mode="ap", encryption="sae-mixed"})
+		ieee80211r:depends({mode="ap-wds", encryption="sae"})
+		ieee80211r:depends({mode="ap-wds", encryption="sae-mixed"})
+	end
+	ieee80211r.rmempty = true
+
+	nasid = s:taboption("encryption", Value, "nasid", translate("NAS ID"),
+		translate("Used for two different purposes: RADIUS NAS ID and " ..
+			"802.11r R0KH-ID. Not needed with normal WPA(2)-PSK."))
+	nasid:depends({mode="ap", encryption="wpa"})
+	nasid:depends({mode="ap", encryption="wpa2"})
+	nasid:depends({mode="ap-wds", encryption="wpa"})
+	nasid:depends({mode="ap-wds", encryption="wpa2"})
+	nasid:depends({ieee80211r="1"})
+	nasid.rmempty = true
+
+	mobility_domain = s:taboption("encryption", Value, "mobility_domain",
+			translate("Mobility Domain"),
+			translate("4-character hexadecimal ID"))
+	mobility_domain:depends({ieee80211r="1"})
+	mobility_domain.placeholder = "4f57"
+	mobility_domain.datatype = "and(hexstring,rangelength(4,4))"
+	mobility_domain.rmempty = true
+
+	reassociation_deadline = s:taboption("encryption", Value, "reassociation_deadline",
+		translate("Reassociation Deadline"),
+		translate("time units (TUs / 1.024 ms) [1000-65535]"))
+	reassociation_deadline:depends({ieee80211r="1"})
+	reassociation_deadline.placeholder = "1000"
+	reassociation_deadline.datatype = "range(1000,65535)"
+	reassociation_deadline.rmempty = true
+
+	ft_protocol = s:taboption("encryption", ListValue, "ft_over_ds", translate("FT protocol"))
+	ft_protocol:depends({ieee80211r="1"})
+	ft_protocol:value("1", translatef("FT over DS"))
+	ft_protocol:value("0", translatef("FT over the Air"))
+	ft_protocol.rmempty = true
+
+	ft_psk_generate_local = s:taboption("encryption", Flag, "ft_psk_generate_local",
+		translate("Generate PMK locally"),
+		translate("When using a PSK, the PMK can be generated locally without inter AP communications"))
+	ft_psk_generate_local:depends({ieee80211r="1"})
+
+	r1_key_holder = s:taboption("encryption", Value, "r1_key_holder",
+			translate("R1 Key Holder"),
+			translate("6-octet identifier as a hex string - no colons"))
+	r1_key_holder:depends({ieee80211r="1", ft_psk_generate_local=""})
+	r1_key_holder.placeholder = "00004f577274"
+	r1_key_holder.datatype = "and(hexstring,rangelength(12,12))"
+	r1_key_holder.rmempty = true
+
+	pmk_r1_push = s:taboption("encryption", Flag, "pmk_r1_push", translate("PMK R1 Push"))
+	pmk_r1_push:depends({ieee80211r="1", ft_psk_generate_local=""})
+	pmk_r1_push.placeholder = "0"
+	pmk_r1_push.rmempty = true
+	-- End of 802.11r options
+
 	local has_80211w = (os.execute("hostapd -v11w 2>/dev/null || hostapd -veap 2>/dev/null") == 0)
 	if has_80211w then
 		ieee80211w = s:taboption("encryption", ListValue, "ieee80211w",

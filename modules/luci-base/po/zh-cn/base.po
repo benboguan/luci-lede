@@ -1432,6 +1432,9 @@ msgstr "Hermes 802.11b 无线控制器"
 msgid "Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"
 msgstr "隐藏 <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"
 
+msgid "Inactive"
+msgstr "活动状态"
+
 msgid "Host"
 msgstr "主机"
 
