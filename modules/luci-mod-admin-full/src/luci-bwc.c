@@ -85,7 +85,7 @@ struct load_entry {
 
 struct radio_entry {
 	uint32_t time;
-	uint16_t rate;
+	uint32_t rate;
 	uint8_t  rssi;
 	uint8_t  noise;
 };
@@ -257,7 +257,7 @@ static void * iw_open(void)
 }
 
 static int iw_update(
-	void *iw, const char *ifname, uint16_t *rate, uint8_t *rssi, uint8_t *noise
+	void *iw, const char *ifname, uint32_t *rate, uint8_t *rssi, uint8_t *noise
 ) {
 	struct iwinfo_ops *(*probe)(const char *);
 	int val;
@@ -326,7 +326,7 @@ static int update_ifstat(
 }
 
 static int update_radiostat(
-	const char *ifname, uint16_t rate, uint8_t rssi, uint8_t noise
+	const char *ifname, uint32_t rate, uint8_t rssi, uint8_t noise
 ) {
 	char path[1024];
 
@@ -415,7 +415,7 @@ static int run_daemon(void)
 	FILE *info;
 	uint32_t rxb, txb, rxp, txp;
 	uint32_t udp, tcp, other;
-	uint16_t rate;
+	uint32_t rate;
 	uint8_t rssi, noise;
 	float lf1, lf5, lf15;
 	char line[1024];
