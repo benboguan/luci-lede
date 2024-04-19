@@ -410,6 +410,10 @@ if hwtype == "mt_dbdc" then
 	doth = s:taboption("advanced", Flag, "doth", translate("802.11h"))
 	doth.default = doth.disabled
 
+	dfs = s:taboption("advanced", Flag, "dfs", translate("Dynamic Frequency Selection(DFS)"));
+	dfs.default = dfs.disabled;
+	dfs:depends("doth", "1");
+
 -- 	whnat = s:taboption("advanced", Flag, "whnat", translate("Wireless HWNAT"))
 -- 	whnat.default = whnat.enabled
 

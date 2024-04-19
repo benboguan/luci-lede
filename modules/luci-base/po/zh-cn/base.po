@@ -1058,6 +1058,9 @@ msgstr "启用"
 msgid "Enable 256QAM modulation"
 msgstr "启用 256QAM 调制"
 
+msgid "Dynamic Frequency Selection(DFS)"
+msgstr "动态频率选择（DFS）"
+
 msgid "Enable for MTK Repeater mode"
 msgstr "MTK 无线中继时启用"
 
